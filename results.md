@@ -1,0 +1,2 @@
+The rank-1 count didn't change. The absence question moved up to rank 1, and the "stage d'été report deadline" question slipped from rank 1 to rank 2 (the Guide's Art. 4 on internships now competes with the calendar line).
+11/11 is a small and easy test. I motivated the chunking change by one of your questions, so treat it as a fair baseline, not proof that the system is at 100%.

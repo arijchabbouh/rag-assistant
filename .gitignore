@@ -1,0 +1,17 @@
+# secrets
+.env
+
+# Python
+.venv/
+__pycache__/
+
+# school documents and data derived from them (not redistributed)
+documents/
+chunks.json
+embeddings.npy
+listes-etudiants/
+a_ocr/
+mise_de_cote/
+
+# temporary files
+prompt.txt

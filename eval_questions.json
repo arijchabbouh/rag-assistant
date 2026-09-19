@@ -1,0 +1,80 @@
+[
+  {
+    "question": "Combien d'heures dure le cours de Web Basics ?",
+    "source": "PE_Informatique",
+    "keywords": [
+      "Matière : Web Basics"
+    ]
+  },
+  {
+    "question": "Quelle est la durée minimale du projet de fin d'études en GSIL ?",
+    "source": "PE_GSIL",
+    "keywords": [
+      "Minimum 16 semaines"
+    ]
+  },
+  {
+    "question": "À partir de combien d'absences dans un module un étudiant ne peut-il pas passer l'examen ?",
+    "source": "Guide",
+    "keywords": [
+      "dépassent les 20%"
+    ]
+  },
+  {
+    "question": "Quand a lieu le forum des entreprises ?",
+    "source": "Calendrier",
+    "keywords": [
+      "Forum des entreprises"
+    ]
+  },
+  {
+    "question": "Quand sont les soutenances de PFE de la deuxième session ?",
+    "source": "Calendrier",
+    "keywords": [
+      "Soutenances de PFE"
+    ]
+  },
+  {
+    "question": "Quel est le coefficient du cours de Lean Management dans l'option Qualité et Maintenance ?",
+    "source": "PE_GSIL",
+    "keywords": [
+      "Option : Qualité & Maintenance",
+      "Matière : Lean Management"
+    ]
+  },
+  {
+    "question": "Combien d'heures fait le cours d'Electronique analogique en mécatronique ?",
+    "source": "PE_Mecatronique",
+    "keywords": [
+      "Matière : Electronique analogique"
+    ]
+  },
+  {
+    "question": "Combien d'heures fait le cours de Gestion des organisations en mécatronique ?",
+    "source": "PE_Mecatronique",
+    "keywords": [
+      "Matière : Gestion des organisations"
+    ]
+  },
+  {
+    "question": "Quelle est la date limite pour déposer le rapport de stage d'été ?",
+    "source": "Calendrier",
+    "keywords": [
+      "Dépôt poster"
+    ]
+  },
+  {
+    "question": "quand l'affichage des notes des examens SR",
+    "source": "Calendrier",
+    "keywords": [
+      "Affichage des notes des examens SR"
+    ]
+  },
+  {
+    "question": "quel est le pourcentage de la note de stage ?",
+    "source": "Guide",
+    "keywords": [
+      "La note du stage d’été"
+    ]
+  }
+]
