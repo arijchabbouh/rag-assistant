@@ -9,6 +9,23 @@ from article_chunks import is_guide, guide_chunks
 CHUNK_SIZE = 800   # max characters per chunk
 OVERLAP = 150      # characters shared between two consecutive chunks
 
+STATUS_FILE = Path("documents_status.json")   # edited by hand: which documents are still in force
+STATUSES = {"actuel", "archive"}
+
+
+def load_statuses():
+    """Return {file name: "actuel" or "archive"} from documents_status.json."""
+    if not STATUS_FILE.exists():
+        return {}
+    documents = json.loads(STATUS_FILE.read_text(encoding="utf-8")).get("documents", {})
+    statuses = {}
+    for name, info in documents.items():
+        status = info.get("status", "actuel")
+        if status not in STATUSES:
+            raise SystemExit(f'{STATUS_FILE}: "{name}" has status "{status}". Use "actuel" or "archive".')
+        statuses[name] = status
+    return statuses
+
 
 def read_pages(path):
     """Return a list of (page_number, text) for a PDF or Word file."""
@@ -51,8 +68,14 @@ files = sorted(
     if p.is_file() and p.suffix.lower() in {".pdf", ".docx"}
 )
 
+statuses = load_statuses()
+
 all_chunks = []
 for f in files:
+    status = statuses.get(f.name)
+    if status is None:
+        print(f"WARNING  {f.name} is not in {STATUS_FILE}: treated as actuel")
+        status = "actuel"
     pieces = []  # list of (page, text)
     mode = "texte"
     is_pdf = f.suffix.lower() == ".pdf"
@@ -80,9 +103,10 @@ for f in files:
             "source": f.name,
             "page": page_num,
             "text": piece,
+            "status": status,
         })
         count += 1
-    print(f"{f.name}: {count} chunks ({mode})")
+    print(f"{f.name}: {count} chunks ({mode}, {status})")
 
 Path("chunks.json").write_text(
     json.dumps(all_chunks, ensure_ascii=False, indent=2), encoding="utf-8"

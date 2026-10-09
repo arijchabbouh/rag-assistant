@@ -221,7 +221,8 @@ def study_plan_chunks(path):
 # ------------------------------------------------------------------- calendar
 
 DAYS = r"(?:LUN|MAR|MER|JEU|VEN|SAM|DIM)"
-MONTHS = r"(?:sept|oct|nov|d[ée]c|janv|f[ée]vr|mars|avr|mai|juin|juil|ao[uû]t)"
+# the calendar writes months in several ways: "févr" or "fev", "avr" or "avril"
+MONTHS = r"(?:sept|oct|nov|d[ée]c|janv|f[ée]vr?|mars|avr(?:il)?|mai|juin|juil|ao[uû]t)"
 # a day name followed by day-of-month numbers (noise), stopping before the real date
 DAY_PREFIX = re.compile(rf"^{DAYS}\s+(?:\d+\*?\s+(?!{MONTHS}\b))*", re.I)
 DATE_START = re.compile(rf"^\d{{1,2}}(?:\s*-\s*\d{{1,2}})?\s*-?\s*{MONTHS}\b", re.I)

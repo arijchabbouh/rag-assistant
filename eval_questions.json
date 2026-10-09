@@ -4,35 +4,40 @@
     "source": "PE_Informatique",
     "keywords": [
       "Matière : Web Basics"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "Quelle est la durée minimale du projet de fin d'études en GSIL ?",
     "source": "PE_GSIL",
     "keywords": [
       "Minimum 16 semaines"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "À partir de combien d'absences dans un module un étudiant ne peut-il pas passer l'examen ?",
     "source": "Guide",
     "keywords": [
       "dépassent les 20%"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "Quand a lieu le forum des entreprises ?",
     "source": "Calendrier",
     "keywords": [
       "Forum des entreprises"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "Quand sont les soutenances de PFE de la deuxième session ?",
     "source": "Calendrier",
     "keywords": [
       "Soutenances de PFE"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "Quel est le coefficient du cours de Lean Management dans l'option Qualité et Maintenance ?",
@@ -40,41 +45,380 @@
     "keywords": [
       "Option : Qualité & Maintenance",
       "Matière : Lean Management"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "Combien d'heures fait le cours d'Electronique analogique en mécatronique ?",
     "source": "PE_Mecatronique",
     "keywords": [
       "Matière : Electronique analogique"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "Combien d'heures fait le cours de Gestion des organisations en mécatronique ?",
     "source": "PE_Mecatronique",
     "keywords": [
       "Matière : Gestion des organisations"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "Quelle est la date limite pour déposer le rapport de stage d'été ?",
     "source": "Calendrier",
     "keywords": [
       "Dépôt poster"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "quand l'affichage des notes des examens SR",
     "source": "Calendrier",
     "keywords": [
       "Affichage des notes des examens SR"
-    ]
+    ],
+    "type": "direct"
   },
   {
     "question": "quel est le pourcentage de la note de stage ?",
     "source": "Guide",
     "keywords": [
       "La note du stage d’été"
-    ]
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Quel est le pourcentage du contrôle continu pour un module organisé en cours intégrés classique ?",
+    "source": "Guide",
+    "keywords": [
+      "65 % examen final et 35 % contrôle continu"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Combien de fois un élève ingénieur peut-il redoubler pendant sa scolarité ?",
+    "source": "Guide",
+    "keywords": [
+      "redoublement est autorisé une seule fois"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Quelle est la durée maximale de la prolongation de scolarité accordée à un élève qui n'a pas validé son stage ou son PFE ?",
+    "source": "Guide",
+    "keywords": [
+      "prolongation de scolarité pouvant aller jusqu’à",
+      "six mois"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Sur quels critères est établi le classement de la promotion ?",
+    "source": "Guide",
+    "keywords": [
+      "Les moyennes des sessions principales des trois années"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Quelles sont les conditions pour être admis en session principale ?",
+    "source": "Guide",
+    "keywords": [
+      "admission en session principale"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Quel est le dernier délai de remise des copies de DS du semestre 1 à l'administration ?",
+    "source": "Calendrier",
+    "keywords": [
+      "Dernier délais de remise des copies des DS",
+      "semestre 1"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Quand a lieu la fête de remise des diplômes ?",
+    "source": "Calendrier",
+    "keywords": [
+      "remise des diplômes"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Quand a lieu la session des posters du stage d'été pour la première année ?",
+    "source": "Calendrier",
+    "keywords": [
+      "Session des posters stage été première année"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Combien d'heures et quel coefficient pour le cours de Circuits logiques en GSInfotroniques ?",
+    "source": "PE_GSInfotroniques",
+    "keywords": [
+      "Matière : Circuits logiques"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Quelle est la durée minimale du stage de fin d'études selon la convention de stage (internship agreement) ?",
+    "source": "INTERNSHIP_AGREEMENT",
+    "keywords": [
+      "minimum duration of the internship is 15 weeks"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Quelles sont les plateformes logicielles et technologies enseignées au département Informatique ?",
+    "source": "Plaquette",
+    "keywords": [
+      "Plateformes Logicielles"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Combien d'heures et quel coefficient pour le cours de Programmation Java en informatique ?",
+    "source": "PE_Informatique",
+    "keywords": [
+      "Matière : Programmation Java"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Combien d'heures fait le cours de Business Intelligence en GSIL ?",
+    "source": "PE_GSIL",
+    "keywords": [
+      "Matière : Business Intelligence"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Combien d'heures et quel coefficient pour le cours de Systèmes robotisés en mécatronique ?",
+    "source": "PE_Mecatronique",
+    "keywords": [
+      "Matière : Systèmes robotisés"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Combien d'heures et quel coefficient pour le cours de Microprocesseurs et Microcontrôleurs en mécatronique ?",
+    "source": "PE_Mecatronique",
+    "keywords": [
+      "Matière : Microprocesseurs et Microcontrôleurs"
+    ],
+    "type": "direct"
+  },
+  {
+    "question": "Est-ce qu'un certificat médical suffit pour justifier mes absences ?",
+    "source": "Guide",
+    "keywords": [
+      "certificats médicaux"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Si je ne viens pas à un examen, quelle note j'obtiens ?",
+    "source": "Guide",
+    "keywords": [
+      "note zéro"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Combien d'heures de travail représente un crédit ?",
+    "source": "Guide",
+    "keywords": [
+      "Le crédit représente"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Quel niveau de langue faut-il justifier pour avoir le diplôme ?",
+    "source": "Guide",
+    "keywords": [
+      "niveauB2"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Avec combien de crédits au minimum peut-on être racheté pour passer en deuxième année ?",
+    "source": "Guide",
+    "keywords": [
+      "au moins 54"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Les matières notées uniquement en TP ont-elles un rattrapage ?",
+    "source": "Guide",
+    "keywords": [
+      "exclusivement"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Combien de professeurs composent le jury du PFE ?",
+    "source": "Guide",
+    "keywords": [
+      "au moins trois (3) enseignants"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Que se passe-t-il si mon stage d'été n'est pas accepté par le jury ?",
+    "source": "Guide",
+    "keywords": [
+      "stage de remplacement"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "J'ai réussi après le rattrapage, est-ce que ça change mon rang dans la promotion ?",
+    "source": "Guide",
+    "keywords": [
+      "classés à la suite"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "C'est quand la rentrée ?",
+    "source": "Calendrier",
+    "keywords": [
+      "Démarrage des cours tous niveaux"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Quand se passent les examens de fin de premier semestre ?",
+    "source": "Calendrier",
+    "keywords": [
+      "Examens de la session principale du premier semestre"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Quand reprennent les cours après les examens du S1 ?",
+    "source": "Calendrier",
+    "keywords": [
+      "Démarrage du second semestre"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Quelles matières étudie-t-on au premier semestre de première année en informatique ?",
+    "source": "PE_Informatique",
+    "keywords": [
+      "Liste des matières",
+      "première année",
+      "Semestre 1"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Est-ce qu'il y a un examen écrit en DevOps en troisième année informatique ?",
+    "source": "PE_Informatique",
+    "keywords": [
+      "Matière : DevOps"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Combien de crédits vaut le PFE en mécatronique ?",
+    "source": "PE_Mecatronique",
+    "keywords": [
+      "Projet de Fin des Etudes"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "Quelles entreprises accueillent les stagiaires du département informatique ?",
+    "source": "Plaquette",
+    "keywords": [
+      "Vermeg"
+    ],
+    "type": "paraphrase"
+  },
+  {
+    "question": "cmb d'absence max par semestre",
+    "source": "Guide",
+    "keywords": [
+      "dépasser 10 %"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "dates rattrapage fin d'année",
+    "source": "Calendrier",
+    "keywords": [
+      "14-26 juin"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "quand est ce que les 2eme année visitent les entreprises",
+    "source": "Calendrier",
+    "keywords": [
+      "Visites des entreprises ING2"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "delai remise notes cc s2",
+    "source": "Calendrier",
+    "keywords": [
+      "remise des notes CC semestre 2"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "le cours de linux embarqué c'est noté comment en infotronique",
+    "source": "PE_GSInfotroniques",
+    "keywords": [
+      "Matière : Linux embarqué"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "coef IA 2eme annee info",
+    "source": "PE_Informatique",
+    "keywords": [
+      "Matière : Intelligence Artificielle"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "volume horaire machine learning option qualité maintenance gsil",
+    "source": "PE_GSIL",
+    "keywords": [
+      "Option : Qualité & Maintenance",
+      "Matière : Machine Learning"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "When is the resit exam session for third-year students?",
+    "source": "Calendrier",
+    "keywords": [
+      "rattrapage ING3"
+    ],
+    "type": "crosslingual"
+  },
+  {
+    "question": "Le rapport de PFE peut-il être confidentiel ?",
+    "source": "INTERNSHIP_AGREEMENT",
+    "keywords": [
+      "FYP report cannot be confidential"
+    ],
+    "type": "crosslingual"
+  },
+  {
+    "question": "Quels documents faut-il fournir pour obtenir une attestation de départ ?",
+    "source": "demandeDepart",
+    "keywords": [
+      "الوثائق المطلوبة"
+    ],
+    "type": "crosslingual"
   }
 ]

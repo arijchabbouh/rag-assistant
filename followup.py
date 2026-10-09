@@ -2,7 +2,7 @@ import re
 from itertools import zip_longest
 
 from ask import generate
-from build_prompt import retrieve, build_prompt, TOP_K
+from build_prompt import retrieve, build_prompt, top_k_for
 
 # beginnings that show the question continues the previous one ("et les DS ?", "pareil pour...")
 FOLLOW_UP_STARTS = ("et ", "et,", "aussi", "pareil", "même chose", "meme chose", "mais ", "donc ")
@@ -28,14 +28,15 @@ def merge(first, second, k):
 
 def ask_with_context(question, previous=None):
     """Like ask(), but a short follow-up is understood with the previous question of the student."""
+    k = top_k_for(question)      # 8 normally, more for a "list them all" question
     if previous and is_follow_up(question):
-        alone = retrieve(question, TOP_K)
-        combined = retrieve(previous + " " + question, TOP_K)
-        selected = merge(combined, alone, TOP_K)
+        alone = retrieve(question, k)
+        combined = retrieve(previous + " " + question, k)
+        selected = merge(combined, alone, k)
         shown = (f"{question}\n(Cette question est peut-être la suite de la précédente : « {previous} ». "
                  f"Si c'est le cas, interprète-la dans ce contexte.)")
     else:
-        selected = retrieve(question, TOP_K)
+        selected = retrieve(question, k)
         shown = question
 
     answer = generate(build_prompt(shown, selected))

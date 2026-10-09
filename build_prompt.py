@@ -8,11 +8,14 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "intfloat/multilingual-e5-small"
-TOP_K = 8   
+TOP_K = 8          # chunks given to the LLM for a normal question
+TOP_K_ENUM = 25    # ...for a "list them all" question (see is_enumeration)
 
 chunks = json.load(open("chunks.json", encoding="utf-8"))
 embeddings = np.load("embeddings.npy")
 model = SentenceTransformer(MODEL_NAME)
+# True for the chunks of a document marked "archive" in documents_status.json
+ARCHIVED = np.array([c.get("status") == "archive" for c in chunks])
 
 
 ABBREVIATIONS = {
@@ -41,7 +44,10 @@ Règles :
 3. Si les extraits ne contiennent pas la réponse, réponds exactement : « Je ne trouve pas cette information dans les documents fournis. » Ne devine pas.
 4. Si la réponse dépend du cas (année, option, type de stage...), donne chaque cas ou précise lequel s'applique.
 5. Réponds en français, de façon courte et claire.
-6. Abréviations courantes : CC = contrôle continu ; DS = devoir surveillé ; SP = session principale ; SR = session de rattrapage ; PFE = projet de fin d'études ; UE = unité d'enseignement."""
+6. Abréviations courantes : CC = contrôle continu ; DS = devoir surveillé ; SP = session principale ; SR = session de rattrapage ; PFE = projet de fin d'études ; UE = unité d'enseignement.
+7. Mise en forme : si la réponse est une liste de plusieurs dates ou événements (calendrier), ou une liste de plusieurs matières avec plusieurs attributs (coefficient, volume horaire, évaluation...), présente-la dans un tableau Markdown : une ligne par événement ou par matière, une colonne par attribut, et la source [n] dans la dernière colonne. Si la réponse tient en une seule information, réponds par une phrase, sans tableau.
+8. Si la question demande une liste complète (toutes les dates, toutes les matières, tous les examens...), donne tous les éléments présents dans les extraits, puis termine par cette phrase exacte : « Attention : cette liste peut être incomplète, vérifiez le document source. » Seule exception : quand tous les éléments viennent d'un seul extrait qui est lui-même une liste (par exemple un extrait « Liste des matières »).
+9. Un extrait marqué « DOCUMENT ARCHIVÉ » décrit une situation ancienne, qui n'est peut-être plus valable. Si tu l'utilises, dis clairement dans la réponse que l'information vient d'un ancien document."""
 
 
 def strip_accents(text):
@@ -56,11 +62,6 @@ heures volume horaire obligatoire autorisé tolérées tolérée nombre maximum 
 étudiant étudiants élève élèves ingénieur département option formation""".split()
 
 WORD_COUNTS = Counter(w for c in chunks for w in re.findall(r"[^\W\d_]{2,}", c["text"].lower()))
-try:
-    for _q in json.load(open("eval_questions.json", encoding="utf-8")):
-        WORD_COUNTS.update(re.findall(r"[^\W\d_]{2,}", _q["question"].lower()))
-except FileNotFoundError:
-    pass
 WORD_COUNTS.update(EXTRA_WORDS)
 BY_PLAIN = {}   
 for _word, _n in WORD_COUNTS.most_common():
@@ -130,18 +131,59 @@ def expand(question, fix=True):
     return question + (" (" + "; ".join(found) + ")" if found else "")
 
 
+# ----------------------------------------------------------------- enumeration
+
+# "list them all" questions: an exhaustive wording followed by a generic plural noun.
+# Checked on the question without accents, in lowercase.
+ENUM_STARTS = (r"(?:tou(?:te)?s les|liste (?:complete )?(?:des|de toutes les|de tous les)|l.ensemble des"
+               r"|quel(?:le)?s sont (?:toutes les|tous les|les))")
+ENUM_NOUNS = (r"(?:dates?|evenements?|echeances?|delais?|matieres?|cours|modules?|options?|specialites?"
+              r"|filieres?|examens?|soutenances?|stages?|unites? d.enseignement|ue)")
+ENUMERATION = re.compile(rf"(?<!\w){ENUM_STARTS}\s+(?:\w+\s+)?{ENUM_NOUNS}(?!\w)")
+
+
+def is_enumeration(question):
+    """True for a question that asks for a whole list ("toutes les dates", "liste des matières")."""
+    return bool(ENUMERATION.search(strip_accents(question.lower())))
+
+
+def top_k_for(question):
+    """How many chunks to give the LLM: more for a "list them all" question, which needs many lines."""
+    return TOP_K_ENUM if is_enumeration(question) else TOP_K
+
+
+# --------------------------------------------------------------------- archives
+
+# The question asks about the past: "ancien", "avant", "archive", "précédent", or a year ("en 2017").
+# Checked on the question without accents, in lowercase.
+ARCHIVE_WORDS = re.compile(r"(?<!\w)(?:ancien(?:ne)?s?|avant|archives?|precedente?s?|en (?:19|20)\d\d)(?!\w)")
+
+
+def wants_archive(question):
+    """True when the question explicitly asks about old documents."""
+    return bool(ARCHIVE_WORDS.search(strip_accents(question.lower())))
+
+
 # ---------------------------------------------------------------------- search
 
-def retrieve(question, k=TOP_K, fix=True):
-    """Return the k chunks closest in meaning to the question."""
+def retrieve(question, k=None, fix=True, include_archive=None):
+    """Return the k chunks closest in meaning to the question (k chosen from the question if not given).
+    Chunks of archived documents are left out, unless the question asks about the past."""
+    if k is None:
+        k = top_k_for(question)
+    if include_archive is None:
+        include_archive = wants_archive(question)
     vec = model.encode(["query: " + expand(question, fix)], normalize_embeddings=True)[0]
     scores = embeddings @ vec
+    if not include_archive:
+        scores[ARCHIVED] = -1.0     # lower than any real similarity: archived chunks go last
     return [chunks[i] for i in np.argsort(scores)[::-1][:k]]
 
 
 def build_prompt(question, selected):
     excerpts = "\n\n".join(
-        f"[{n}] ({c['source']}, page {c['page']})\n{c['text']}"
+        f"[{n}] ({c['source']}, page {c['page']}"
+        f"{', DOCUMENT ARCHIVÉ' if c.get('status') == 'archive' else ''})\n{c['text']}"
         for n, c in enumerate(selected, start=1)
     )
     return f"{RULES}\n\nEXTRAITS :\n\n{excerpts}\n\nQUESTION : {question}\n\nRÉPONSE :"
@@ -153,6 +195,7 @@ if __name__ == "__main__":
     with open("prompt.txt", "w", encoding="utf-8") as f:
         f.write(build_prompt(question, selected))
     print("Search used:", expand(question))
+    print("Enumeration question:", is_enumeration(question), f"-> {len(selected)} chunks")
     print("Prompt saved to prompt.txt. Sources retrieved:")
     for n, c in enumerate(selected, start=1):
         print(f"  [{n}] {c['source']} (page {c['page']})")

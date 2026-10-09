@@ -17,18 +17,27 @@ TODO: add a screenshot of the app answering a question, and one showing a refusa
 
 ## Results
 
-Test set: questions written by hand from the documents. Metric: the chunk containing the answer
-is among the chunks given to the LLM.
+Test set: 52 questions written by hand (`eval_questions.json`), each with the file and the text that the
+right chunk must contain. Four types: `direct` (close to the document's wording), `paraphrase`,
+`noisy` (abbreviations, no accents), `crosslingual` (question and document in different languages).
 
-| Version | Recall@5 | Right chunk ranked first |
-|---|---|---|
-| v1: guide cut in fixed-size pieces | 10/11 | 8/11 |
-| v2: guide cut by article | 11/11 | 8/11 |
-| TODO: latest run (number of questions, Recall@8) | | |
+- **hit@k**: the right chunk is among the first k results.
+- **MRR**: average of 1/rank of the right chunk (1 = always first).
 
-TODO: paste the table printed by `python stress_test.py` (typing patterns, with and without fixes).
+Latest run (retrieval only, top 8 chunks go to the LLM):
 
-Small test set: these numbers show a trend, not a guarantee.
+| Type | Questions | hit@1 | hit@3 | hit@5 | hit@8 | MRR |
+|---|---|---|---|---|---|---|
+| direct | 26 | 85% | 96% | 100% | 100% | 0.901 |
+| paraphrase | 16 | 62% | 75% | 75% | 75% | 0.677 |
+| noisy | 7 | 71% | 86% | 100% | 100% | 0.798 |
+| crosslingual | 3 | 33% | 67% | 100% | 100% | 0.511 |
+| **all** | **52** | **73%** | **87%** | **92%** | **92%** | **0.796** |
+
+History of every measured change: [results.md](results.md). Reproduce with `python evaluate.py`.
+
+Small test set: one question is about 2 points, so these numbers show a trend, not a guarantee.
+The answers written by the LLM are not evaluated yet.
 
 ## Run it yourself
 

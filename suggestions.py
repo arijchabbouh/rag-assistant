@@ -1,7 +1,8 @@
 import json
 import re
 
-MONTHS = r"(?:sept|oct|nov|d[ée]c|janv|f[ée]vr|mars|avr|mai|juin|juil|ao[uû]t)"
+# the calendar writes months in several ways: "févr" or "fev", "avr" or "avril"
+MONTHS = r"(?:sept|oct|nov|d[ée]c|janv|f[ée]vr?|mars|avr(?:il)?|mai|juin|juil|ao[uû]t)"
 # a calendar date at the start of a line: "17-nov", "1-3 sept", "21 sept-30 sept", "30 nov- 12 dec"
 DATE = re.compile(rf"^\d{{1,2}}(?:\s*-\s*\d{{1,2}})?\s*-?\s*{MONTHS}\b(?:\s*-\s*\d{{1,2}}\s*{MONTHS}\b)?", re.I)
 

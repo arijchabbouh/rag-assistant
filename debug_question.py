@@ -1,14 +1,9 @@
 import json
 import sys
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from build_prompt import chunks, embeddings, model, expand
 
-MODEL_NAME = "intfloat/multilingual-e5-small"
-
-chunks = json.load(open("chunks.json", encoding="utf-8"))
-embeddings = np.load("embeddings.npy")
 questions = json.load(open("eval_questions.json", encoding="utf-8"))
-model = SentenceTransformer(MODEL_NAME)
 
 needle = " ".join(sys.argv[1:]).lower()
 q = next((x for x in questions if needle in x["question"].lower()), None)
@@ -24,7 +19,8 @@ def is_correct(chunk, q):
     return all(k.lower() in text for k in q["keywords"])
 
 
-vec = model.encode(["query: " + q["question"]], normalize_embeddings=True)[0]
+# same text as the real search (typing fixes + abbreviations), so the ranks match evaluate.py
+vec = model.encode(["query: " + expand(q["question"])], normalize_embeddings=True)[0]
 scores = embeddings @ vec
 order = np.argsort(scores)[::-1]
 
