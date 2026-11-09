@@ -12,6 +12,10 @@ embeddings.npy
 listes-etudiants/
 a_ocr/
 mise_de_cote/
+plus_tard/
 
 # temporary files
 prompt.txt
+
+# API feedback from users (may contain personal questions)
+feedback.jsonl

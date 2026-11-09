@@ -5,3 +5,4 @@
 | 2026-10-05 | Leak removed: typo-fix vocabulary no longer reads eval_questions.json | 52 | 73% | 87% | 92% | 92% | 0.796 |
 | 2026-10-09 | Calendar month regex fixed (fev, avril): 6 missing lines indexed, 498 chunks | 52 | 73% | 87% | 92% | 92% | 0.796 |
 | 2026-10-09 | Enumeration questions get 25 chunks; archived documents (2017 brochure) excluded by default | 52 | 73% | 87% | 92% | 92% | 0.796 |
+| 2026-11-09 | Clean env rebuild: chunks + embeddings regenerated with status field (pre-FastAPI checkpoint) | 52 | 73% | 87% | 92% | 92% | 0.796 |
