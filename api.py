@@ -30,7 +30,6 @@ ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://
 FEEDBACK_FILE = Path(os.environ.get("FEEDBACK_FILE", "feedback.jsonl"))
 RATE_LIMIT = 20          # requests...
 RATE_WINDOW = 60.0       # ...per this many seconds, per client IP
-GEMINI_TIMEOUT_MS = 30_000
 
 INTERNAL_ERROR = "Une erreur interne est survenue. Réessayez plus tard."
 TOO_MANY = "Trop de requêtes. Attendez une minute puis réessayez."
@@ -44,15 +43,9 @@ async def lifespan(app):
     if not os.environ.get("GEMINI_API_KEY"):
         # ask.py would call SystemExit on import; fail with a readable message instead
         raise RuntimeError("GEMINI_API_KEY is not set: copy .env.example to .env and put your key in it.")
-    from google import genai
-    from google.genai import types
-    import ask
+    import ask            # its Gemini client has a timeout (ask.TIMEOUT_MS)
     import build_prompt
     import followup
-
-    # ask.py creates its client without a timeout: a model that never answers would block the request
-    # forever. A timeout turns it into an error, and ask.generate() then tries the next model.
-    ask.client = genai.Client(http_options=types.HttpOptions(timeout=GEMINI_TIMEOUT_MS))
 
     pipeline.update(ask=ask, build_prompt=build_prompt, followup=followup)
     logger.info("Pipeline loaded: %d chunks, embeddings %s", len(build_prompt.chunks),

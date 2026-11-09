@@ -9,14 +9,21 @@ if not os.environ.get("GEMINI_API_KEY"):
     raise SystemExit
 
 from google import genai
+from google.genai import types
 from build_prompt import retrieve, build_prompt
 
 # Models tried in this order. The free limits are counted PER MODEL, so when one is
 # exhausted the next one can still answer. Names change: check them in Google AI Studio
 # (a name that no longer exists is simply skipped).
-MODELS = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite"]
+# Order measured on 2026-11-09 (3 calls each, trivial prompt): flash-lite 0.6 / 6.6 / 13.5 s,
+# 3.5-flash 5.8 / 12.0 / 18.2 s. gemini-3.8-flash removed: 504 DEADLINE_EXCEEDED after ~28 s, 3 times out of 3.
+MODELS = ["gemini-3.1-flash-lite", "gemini-3.5-flash"]
 
-client = genai.Client()      # reads the key from the GEMINI_API_KEY environment variable
+# Without a timeout, a model that never answers blocks the question forever. After 30 s the call
+# fails and generate() tries the next model.
+TIMEOUT_MS = 30_000
+
+client = genai.Client(http_options=types.HttpOptions(timeout=TIMEOUT_MS))  # key read from GEMINI_API_KEY
 
 
 LIMIT_MESSAGE = (
@@ -43,9 +50,11 @@ def is_rate_limit(error):
 
 
 def is_server_error(error):
+    """Google's servers failed, or did not answer within TIMEOUT_MS (httpx.ReadTimeout, ConnectTimeout...)."""
     text = f"{type(error).__name__} {error}"
     return (getattr(error, "code", None) in (500, 502, 503, 504) or "ServerError" in text
-            or "UNAVAILABLE" in text or "overloaded" in text.lower())
+            or "UNAVAILABLE" in text or "overloaded" in text.lower()
+            or "timeout" in type(error).__name__.lower() or "timed out" in text.lower())
 
 
 def is_missing_model(error):
