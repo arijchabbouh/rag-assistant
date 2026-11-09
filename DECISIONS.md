@@ -64,6 +64,24 @@ from dates in the text (unreliable, most chunks carry no date); rank newer docum
 preference still lets an old answer through).
 In the eval, the 2 questions whose answer is in the brochure are searched with archives included.
 
+## Typo fixer: never rewrite correct French (2026-11-09)
+
+The old `correct()` "fixed" any word absent from the documents into the closest document word: on the
+52 eval questions it changed 24 ("Quel" → "Que", "faut" → "fait", "menu" → "ment", "anciennes" → "antennes",
+"noté" → "note"). A word is now left alone if it is:
+1. a document word, or in `french_words.txt` (everyday words, edited by hand);
+2. typed with accents: accents are only added to accent-less words ("delai" → "délai"), never changed;
+3. another form of the candidate (same stem, plural/feminine/conjugation ending: "visitent" / "visites",
+   "accordée" / "accorder").
+Alternatives: only fix words of 5+ letters (would block "foum" → "forum" and still allow
+"change" → "charge"); a full French dictionary (a large dependency or file for a small benefit).
+`tests/test_correct.py`: 40 normal questions must come out unchanged, 13 real typos must be fixed.
+Eval: hit@1 73% → 75%, MRR 0.796 → 0.804, hit@8 unchanged, noisy unchanged. hit@5 92% → 90%: "Le rapport
+de PFE peut-il être confidentiel ?" goes from rank 5 to 7, because the old rule turned the French word
+"confidentiel" into the English "confidential", which matched the English agreement by accident. Still in
+the top 8 sent to the LLM. Not restored: translating is not a typo fix.
+Lost on purpose: "infotronique" → "infotroniques" (singular/plural, left to the search model).
+
 ## Known weaknesses, not fixed yet
 
 - A "list everything" question sees 25 chunks: "quelles sont toutes les dates du calendrier" returns 25
@@ -72,10 +90,6 @@ In the eval, the 2 questions whose answer is in the brochure are searched with a
   word "option": the choice is made through three baskets (Panier SI / Rx / Emb), and the footnote that
   explains it ("choisir 6 matières optionnelles") is dropped by the table chunker.
 
-- The typo fixer (`correct()` in `build_prompt.py`) rewrites correct French words that are absent from the
-  documents ("Quel" → "Que", "faut" → "fait", "change" → "charge"). On the 52 questions it changes 24 of
-  them and brings no measurable gain (MRR 0.796 with it, 0.802 without). The eval set has no real typos,
-  so its benefit is unmeasured.
 - No unanswerable questions in the eval set: refusals are a generation behaviour, and generation is not
   evaluated yet.
 - 52 questions: one question is about 2 points. Differences below ~4 points are noise.

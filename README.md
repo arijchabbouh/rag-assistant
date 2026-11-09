@@ -212,10 +212,10 @@ Latest run (2026-11-09, retrieval only, the top 8 chunks go to the LLM):
 | Type | Questions | hit@1 | hit@3 | hit@5 | hit@8 | MRR |
 |---|---|---|---|---|---|---|
 | direct | 26 | 85% | 96% | 100% | 100% | 0.901 |
-| paraphrase | 16 | 62% | 75% | 75% | 75% | 0.677 |
+| paraphrase | 16 | 69% | 75% | 75% | 75% | 0.708 |
 | noisy | 7 | 71% | 86% | 100% | 100% | 0.798 |
-| crosslingual | 3 | 33% | 67% | 100% | 100% | 0.511 |
-| **all** | **52** | **73%** | **87%** | **92%** | **92%** | **0.796** |
+| crosslingual | 3 | 33% | 67% | 67% | 100% | 0.492 |
+| **all** | **52** | **75%** | **87%** | **90%** | **92%** | **0.804** |
 
 Every measured change is one line in [results.md](results.md) (`python evaluate.py "what changed"`).
 Design choices and the alternatives considered are in [DECISIONS.md](DECISIONS.md).
@@ -232,11 +232,12 @@ The test set is small: one question is about 2 points, so these numbers show a t
 - **Vocabulary mismatch.** "Les options en 3ème année informatique" is refused: the current study plan
   never says "option" (it uses "Panier SI / Rx / Emb"), and the footnote that explains the choice is lost
   by the table parser.
-- **The typo fixer can rewrite correct words** that are absent from the documents: "quel" → "que",
-  "anciennes" → "antennes", "avant" → "ayant", "menu" → "ment" (visible in the API's `corrected_query`).
-  It brings no measurable gain on the test set, which contains no real typos.
-- **Slow answers (40 to 60 s through the API on 2026-11-09).** The first model in `ask.py`'s list
-  (`gemini-3.8-flash`) currently times out; the API gives each model 30 s, then tries the next one.
+- **The typo fixer only knows the documents' words and a hand-made list** (`french_words.txt`). A correct
+  French word that is in neither list and is one letter away from a document word can still be "fixed":
+  add it to `french_words.txt`. Tested on 40 normal questions (`tests/test_correct.py`).
+- **Gemini answer time varies a lot** (0.6 to 18 s for a trivial prompt on 2026-11-09). Each model gets
+  30 s (`ask.TIMEOUT_MS`), then the next one is tried. The faster model is first, a "lite" one: its
+  answers are not evaluated yet.
 - **API rate limit is in memory, per process:** it resets on restart, is not shared between several
   uvicorn workers, and behind a reverse proxy every client has the proxy's IP.
 - **Archive detection is a word list.** A question about the past without one of those words won't see
@@ -257,12 +258,13 @@ The test set is small: one question is about 2 points, so these numbers show a t
 app.py                 Streamlit chat interface (older; the React one replaces it)
 frontend/              React interface (Vite): src/App.jsx, src/components/, src/styles.css, src/api.js
 api.py                 FastAPI: /ask, /health, /feedback (CORS, rate limit, error mapping)
-tests/test_api.py      API tests (pytest + TestClient, Gemini faked)
+tests/                 pytest: API (Gemini faked), model fallback, typo fixer
 ask.py                 retrieval + Gemini call, model fallback, CLI entry point
 build_prompt.py        query clean-up, retrieval, enumeration/archive detection, prompt rules
 followup.py            merges the previous question for follow-ups ("et en 2ème année ?")
 suggestions.py         question suggestions shown while the student types
 config.py              reads .env
+french_words.txt       everyday words the typo fixer must never change (edited by hand)
 
 chunk_documents.py     documents/ -> chunks.json (uses documents_status.json)
 table_chunks.py        study-plan tables and calendar parsers (pdfplumber)

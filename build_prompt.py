@@ -92,17 +92,48 @@ def edit_distance(a, b, limit):
     return prev[-1]
 
 
+# Everyday French words that are never "corrected" (the documents don't contain all of them: "quel", "menu"...).
+# Edited by hand in french_words.txt.
+COMMON_WORDS = {
+    w for line in open("french_words.txt", encoding="utf-8") if not line.lstrip().startswith("#")
+    for w in re.findall(r"[^\W\d_]+", line.lower())
+}
+
+# Endings of plural, feminine and conjugated forms. Two words that differ only by these endings are two forms
+# of the same word ("visitent" / "visites", "accordée" / "accorder", "langue" / "langues"): the student's form
+# is kept, the search model handles it.
+INFLECTIONS = ("", "s", "x", "e", "es", "é", "ée", "és", "ées", "er", "ez", "ent", "ant", "ants", "ante", "antes",
+               "ons", "ait", "ais", "aient")
+INFLECTIONS_PLAIN = sorted({strip_accents(s) for s in INFLECTIONS}, key=len, reverse=True)
+
+
+def same_word_other_form(a, b):
+    """True if a and b (without accents) are the same stem with two different endings: "visitent" / "visites"."""
+    if a == b:              # only the accents differ ("delai" / "délai"): a real fix, not another form
+        return False
+    for ending in INFLECTIONS_PLAIN:
+        if a.endswith(ending):
+            stem = a[: len(a) - len(ending)]
+            if len(stem) >= 3 and b.startswith(stem) and b[len(stem):] in INFLECTIONS_PLAIN:
+                return True
+    return False
+
+
 def correct(question):
-    """Fix wrong/missing accents and small typos, using the words found in the documents."""
+    """Fix missing accents and small typos, using the words found in the documents.
+    Never touches a word that is already correct French: a document word, a common word (french_words.txt),
+    a word typed with accents (only accent-less words get accents), or another form of the candidate word."""
     def fix_word(match):
         word = match.group(0)
         low = word.lower()
-        if len(low) < 3 or low in WORD_COUNTS or low in ABBREVIATIONS:
+        if len(low) < 3 or low in WORD_COUNTS or low in ABBREVIATIONS or low in COMMON_WORDS:
             return word
         if word.isupper() and len(word) <= 5:      # probably an acronym (GSIL, INFO...)
             return word
         plain = strip_accents(low)
-        best = BY_PLAIN.get(plain)                  # same letters, other accents
+        # same letters, other accents: only when the student typed no accent at all ("delai" -> "délai");
+        # a word typed with accents ("noté") is taken as written
+        best = BY_PLAIN.get(plain) if plain == low else None
         if best is None and len(plain) >= 4:        # a typo: closest known word
             limit = 1 if len(plain) <= 7 else 2
             scored = []
@@ -115,6 +146,8 @@ def correct(question):
             if scored:
                 best = BY_PLAIN[min(scored)[2]]
         if best is None or best == low:
+            return word
+        if same_word_other_form(plain, strip_accents(best)):
             return word
         return best.capitalize() if word[0].isupper() else best
     return re.sub(r"[^\W\d_]+", fix_word, question)

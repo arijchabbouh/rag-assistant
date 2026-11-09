@@ -1,0 +1,61 @@
+# Common French words that the typo fixer (correct() in build_prompt.py) must never change.
+# Words found in the documents are already protected; this list covers everyday words that the
+# documents may not contain ("quel", "menu", "avant"...). One or more words per line, lowercase,
+# with their accents. Lines starting with # are ignored. Add a word here if the fixer damages it.
+# Plural, feminine and conjugated forms of a protected word are already left alone (see INFLECTIONS).
+
+# --- question words, pronouns, determiners, prepositions, conjunctions
+quel quelle quels quelles lequel laquelle lesquels lesquelles qui que quoi quand comment pourquoi combien où
+le la les un une des du de au aux ce cet cette ces mon ma mes ton ta tes son sa ses notre nos votre vos leur leurs
+je tu il elle on nous vous ils elles me te se moi toi lui eux y en ça cela ceci celui celle ceux celles chacun
+dans sur sous avec sans pour par chez vers entre avant après pendant depuis jusque jusqu contre selon malgré
+et ou mais donc car ni si comme lorsque quand puisque parce alors ensuite puis aussi encore déjà toujours jamais
+ne pas plus moins très trop peu beaucoup bien mal assez tout tous toute toutes autre autres même mêmes seul seule
+oui non peut-être vraiment surtout seulement environ presque ici là partout ailleurs dont est-ce
+
+# --- frequent verbs (infinitive + common forms)
+être suis es est sommes êtes sont était étaient sera seront serait été soit
+avoir ai as avons avez ont avait avaient aura auront aurait eu ait
+faire fais fait faisons faites font faisait fera ferait
+pouvoir peux peut pouvons pouvez peuvent pourrait pourrais puis-je pu
+vouloir veux veut voulons voulez veulent voudrais voudrait
+devoir dois doit devons devez doivent devrait devrais dû
+falloir faut faudrait fallait
+aller vais vas va allons allez vont irai ira
+savoir sais sait savons savez savent su
+venir viens vient venons venez viennent venu
+prendre prends prend prenons prenez prennent pris
+mettre mets met mettons mettez mettent mis
+dire dis dit disons dites disent
+voir vois voit voyons voyez voient vu
+passer passe passent passé changer change changent changé choisir choisis choisit choisi
+obtenir obtiens obtient obtenu rendre rends rend rendu donner donne donné trouver trouve trouvé
+demander demande demandé payer paie paye payé signer signe signé envoyer envoie envoyé
+commencer commence commencé finir finit fini durer dure duré compter compte compté
+recruter recrute refaire refait rater raté réussir réussi échouer échoué valider valide validé
+inscrire inscris inscrit déposer dépose déposé contacter contacte appeler appelle
+sortir sort partir part arriver arrive rester reste ouvrir ouvre fermer ferme
+publier publie publié afficher affiche affiché noter note noté compose composer composé
+accepter accepte accepté refuser refuse refusé autoriser autorise autorisé
+travailler travaille étudier étudie apprendre apprend enseigner enseigne enseigné
+justifier justifie justifié fournir fournit fourni assister assiste manquer manque
+
+# --- nouns: school life
+menu cantine restaurant restauration repas foyer bibliothèque salle amphi amphithéâtre bureau
+transport bus navette parking logement chambre internat résidence bourse prix frais tarif
+club association activité activités sport événement fête soirée voyage sortie
+ami amie amis professeur prof enseignant enseignants directeur directrice administration secrétariat scolarité
+étudiant étudiante élève élèves classe groupe promotion niveau filière parcours spécialité option
+cours séance horaire horaires emploi temps planning calendrier date dates jour jours semaine mois an année
+matin midi soir heure heures minute minutes retard absence absences présence certificat attestation
+diplôme note notes moyenne examen examens devoir devoirs session rattrapage résultat résultats
+stage stages rapport soutenance jury convention entreprise entreprises projet projets
+règle règles règlement problème question réponse demande document documents dossier formulaire
+langue langues anglais français arabe allemand informatique mécanique électrique ligne site email
+vacances hiver été printemps automne rentrée inscription réinscription cas raison droit droits
+
+# --- adjectives
+ancien ancienne anciens anciennes nouveau nouvelle nouveaux nouvelles premier première dernier dernière
+prochain prochaine précédent précédente actuel actuelle grand grande petit petite long longue court courte
+gratuit gratuite payant obligatoire facultatif possible impossible vrai faux médical confidentiel public privé
+plein pleine tôt tard rapide difficile facile important principal principale
