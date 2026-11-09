@@ -82,13 +82,28 @@ de PFE peut-il être confidentiel ?" goes from rank 5 to 7, because the old rule
 the top 8 sent to the LLM. Not restored: translating is not a typo fix.
 Lost on purpose: "infotronique" → "infotroniques" (singular/plural, left to the search model).
 
+## "Options" → "panier d'option" (2026-11-09)
+
+"Quelles sont les options en 3ème année informatique ?" was refused: the Informatique study plan never says
+"option". Its footnote (page 6): « Les élèves ingénieurs admis en troisième année sont invités à choisir
+6 matières optionnelles à raison des deux matières de chaque panier d'option » ; the tables say
+"ISI6.Panier SI", "ISI7.Panier Rx", "ISI8.Panier Emb". Three changes, each needed:
+1. **Footnotes are indexed** (`table_chunks.py`): lines starting with "*" under or inside a study-plan table
+   become chunks, with the same context header as the courses. +5 chunks (Informatique, Mécatronique,
+   3× GSIL), none removed. Before, no chunk said what a "panier" is.
+2. **`SYNONYMS` in `build_prompt.py`**: "option(s)" adds "panier d'option, matières optionnelles" to the
+   search (basket chunks in the top 25: 4 → 13; the footnote is rank 1). Not for questions about the past
+   ("les anciennes options" means the 2017 brochure's specialities: with the synonyms it lost the brochure).
+3. **The prompt shows the same words to the model** ("Vocabulaire des documents pour cette question : ...").
+   With the right excerpts but without this line, gemini-3.1-flash-lite refused 2 times out of 2 (once while
+   quoting the right sentence); with it, it answered 2 times out of 2.
+Alternative: a glossary in the prompt rules for every question (more tokens on every question, for one word).
+Eval unchanged (no eval question is about Informatique options): kept as `tests/test_synonyms.py`.
+
 ## Known weaknesses, not fixed yet
 
 - A "list everything" question sees 25 chunks: "quelles sont toutes les dates du calendrier" returns 25
   dates out of 50, with the warning that the list may be incomplete. Still partial.
-- "Quelles sont les options en 3ème année informatique" is refused. The current study plan never uses the
-  word "option": the choice is made through three baskets (Panier SI / Rx / Emb), and the footnote that
-  explains it ("choisir 6 matières optionnelles") is dropped by the table chunker.
 
 - No unanswerable questions in the eval set: refusals are a generation behaviour, and generation is not
   evaluated yet.

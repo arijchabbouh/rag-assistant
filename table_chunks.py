@@ -44,6 +44,30 @@ def normalize_header(cell):
     return None
 
 
+# a line that starts a new block, so it ends a footnote
+NOT_FOOTNOTE = re.compile(r"^\s*(?:\*|Semestre|Plan d|Option|UE\b|Stages|FORMATION)", re.I)
+
+
+def footnotes(text):
+    """Footnotes written under the tables ("* Les élèves ingénieurs ... choisir 6 matières optionnelles ...").
+    A footnote starts with "*" and continues on the next lines until a title or another footnote."""
+    notes, current = [], None
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("*") and len(line) > 30:
+            if current:
+                notes.append(current)
+            current = line.lstrip("* ").strip()
+        elif current is not None and line and not NOT_FOOTNOTE.match(line) and len(line) > 30:
+            current += " " + line
+        elif current is not None:
+            notes.append(current)
+            current = None
+    if current:
+        notes.append(current)
+    return notes
+
+
 def study_plan_chunks(path):
     """Return a list of (page_number, text): one chunk per course + one summary per semester."""
     results = []
@@ -76,12 +100,15 @@ def study_plan_chunks(path):
         if m:
             ctx["validation"] = m.group(0)
 
-    def read_region(page, top, bottom):
-        """Read the text of a horizontal band of the page (titles between tables)."""
+    def read_region(page, page_num, top, bottom):
+        """Read the text of a horizontal band of the page (titles and footnotes between tables)."""
         x0, y0, x1, y1 = page.bbox
         top, bottom = max(top, y0), min(bottom, y1)
         if bottom - top > 2:
-            update_context(page.crop((x0, top, x1, bottom)).extract_text() or "")
+            text = page.crop((x0, top, x1, bottom)).extract_text() or ""
+            for note in footnotes(text):
+                results.append((page_num, f"{head()} — Note : {note}"))
+            update_context(text)
 
     def head():
         parts = ["Plan d'études",
@@ -107,7 +134,7 @@ def study_plan_chunks(path):
             prev = page.bbox[1]
 
             for t in tables:
-                read_region(page, prev, t.bbox[1])   # titles above this table
+                read_region(page, page_num, prev, t.bbox[1])   # titles above this table
 
                 for raw in t.extract():
                     row = [clean(c) for c in raw]
@@ -115,8 +142,12 @@ def study_plan_chunks(path):
                     if not filled:
                         continue
 
-                    # title-like rows (few filled cells) can carry the context
+                    # title-like rows (few filled cells) can carry the context, or a footnote drawn
+                    # inside the table frame (Informatique: "* ... choisir 6 matières optionnelles ...")
                     if len(filled) <= 3:
+                        for cell in filled:
+                            for note in footnotes(cell):
+                                results.append((page_num, f"{head()} — Note : {note}"))
                         update_context(" ".join(filled))
 
                     # where is the course-name column? It moves when a table
@@ -202,7 +233,7 @@ def study_plan_chunks(path):
 
                 prev = t.bbox[3]
 
-            read_region(page, prev, page.bbox[3])   # text below the last table
+            read_region(page, page_num, prev, page.bbox[3])   # text below the last table
 
     for (formation, annee, option, semestre), entry in semesters.items():
         parts = ["Liste des matières",

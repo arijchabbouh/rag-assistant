@@ -229,9 +229,12 @@ The test set is small: one question is about 2 points, so these numbers show a t
 - **Paraphrases are the weak spot:** 4 of 16 reworded questions never get the right chunk in the top 8.
 - **"List everything" questions are partial.** They get 25 chunks, but the calendar alone has 50 lines:
   "toutes les dates du calendrier" returns part of them, with a warning that the list may be incomplete.
-- **Vocabulary mismatch.** "Les options en 3ème année informatique" is refused: the current study plan
-  never says "option" (it uses "Panier SI / Rx / Emb"), and the footnote that explains the choice is lost
-  by the table parser.
+- **Vocabulary mismatch is fixed by hand, word by word.** Students say "options", the Informatique study
+  plan says "panier d'option" / "matières optionnelles": `SYNONYMS` in `build_prompt.py` adds the documents'
+  words to the search and tells the model about them. Other student words may still miss.
+  "Les options en 3ème année informatique" now gets an answer, but the list of courses is partial
+  (13 of the 28 basket courses reach the model), and the model may expand "SI / Rx / Emb" from its own
+  knowledge.
 - **The typo fixer only knows the documents' words and a hand-made list** (`french_words.txt`). A correct
   French word that is in neither list and is one letter away from a document word can still be "fixed":
   add it to `french_words.txt`. Tested on 40 normal questions (`tests/test_correct.py`).
@@ -258,7 +261,7 @@ The test set is small: one question is about 2 points, so these numbers show a t
 app.py                 Streamlit chat interface (older; the React one replaces it)
 frontend/              React interface (Vite): src/App.jsx, src/components/, src/styles.css, src/api.js
 api.py                 FastAPI: /ask, /health, /feedback (CORS, rate limit, error mapping)
-tests/                 pytest: API (Gemini faked), model fallback, typo fixer
+tests/                 pytest: API (Gemini faked), model fallback, typo fixer, synonyms
 ask.py                 retrieval + Gemini call, model fallback, CLI entry point
 build_prompt.py        query clean-up, retrieval, enumeration/archive detection, prompt rules
 followup.py            merges the previous question for follow-ups ("et en 2ème année ?")
@@ -267,7 +270,7 @@ config.py              reads .env
 french_words.txt       everyday words the typo fixer must never change (edited by hand)
 
 chunk_documents.py     documents/ -> chunks.json (uses documents_status.json)
-table_chunks.py        study-plan tables and calendar parsers (pdfplumber)
+table_chunks.py        study-plan tables (+ their footnotes) and calendar parsers (pdfplumber)
 article_chunks.py      student guide: one chunk per article
 embed_chunks.py        chunks.json -> embeddings.npy
 documents_status.json  actuel / archive for each document (edited by hand)

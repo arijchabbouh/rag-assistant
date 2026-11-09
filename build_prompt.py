@@ -33,7 +33,17 @@ ABBREVIATIONS = {
     "ens": "enseignant",
     "etud": "étudiant",
     "sem": "semestre",
-    
+
+}
+
+# Students' words that the documents never use, with the documents' own wording, added to the search.
+# Keys are regexes checked on the question without accents, in lowercase.
+# "options": the Informatique study plan (3rd year) groups its elective courses in "paniers" (ISI6.Panier SI,
+# ISI7.Panier Rx, ISI8.Panier Emb); its footnote says "choisir 6 matières optionnelles à raison des deux
+# matières de chaque panier d'option". Other study plans (GSIL) do say "option": the original word stays in
+# the question, these words are only added.
+SYNONYMS = {
+    r"options?": "panier d'option, matières optionnelles",
 }
 
 RULES = """Tu es un assistant qui répond aux questions des étudiants de l'École Nationale d'Ingénieurs de Carthage (ENICarthage).
@@ -154,14 +164,25 @@ def correct(question):
 
 
 def expand(question, fix=True):
-    """The text used for the search: fixed typing + full form of known abbreviations."""
+    """The text used for the search: fixed typing + full form of known abbreviations + documents' synonyms."""
     if fix:
         question = correct(normalize(question))
     found = []
     for abbr, full in ABBREVIATIONS.items():
         if re.search(rf"(?<!\w){abbr}(?!\w)", question, re.IGNORECASE):
             found.append(full)
+    found += synonyms_for(question)
     return question + (" (" + "; ".join(found) + ")" if found else "")
+
+
+def synonyms_for(question):
+    """The documents' words for the students' words of this question (SYNONYMS).
+    The synonyms describe the CURRENT documents. A question about the past ("les anciennes options")
+    means the old wording (the 2017 brochure's "spécialités"), so nothing is added."""
+    if wants_archive(question):
+        return []
+    plain = strip_accents(question.lower())
+    return [words for pattern, words in SYNONYMS.items() if re.search(rf"(?<!\w){pattern}(?!\w)", plain)]
 
 
 # ----------------------------------------------------------------- enumeration
@@ -219,7 +240,11 @@ def build_prompt(question, selected):
         f"{', DOCUMENT ARCHIVÉ' if c.get('status') == 'archive' else ''})\n{c['text']}"
         for n, c in enumerate(selected, start=1)
     )
-    return f"{RULES}\n\nEXTRAITS :\n\n{excerpts}\n\nQUESTION : {question}\n\nRÉPONSE :"
+    # The model does not link the student's word to the documents' word on its own ("options" vs
+    # "matières optionnelles, panier d'option": refused 2/2 without this line, answered 2/2 with it).
+    words = synonyms_for(question)
+    vocabulary = (f"\n(Vocabulaire des documents pour cette question : {'; '.join(words)}.)" if words else "")
+    return f"{RULES}\n\nEXTRAITS :\n\n{excerpts}\n\nQUESTION : {question}{vocabulary}\n\nRÉPONSE :"
 
 
 if __name__ == "__main__":
