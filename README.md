@@ -75,6 +75,53 @@ python build_prompt.py "ta question"   # shows the retrieved chunks, writes prom
 python evaluate.py                     # retrieval scores, no API call
 ```
 
+## HTTP API (FastAPI)
+
+`api.py` exposes the same pipeline as the Streamlit app (`followup.ask_with_context`), for a web front end.
+
+```powershell
+uvicorn api:app --reload --port 8000
+```
+
+The embedding model and `embeddings.npy` are loaded once at startup. Interactive docs, where you can
+also try each endpoint: http://localhost:8000/docs
+
+| Method | Path | Body | Response |
+|---|---|---|---|
+| GET | `/health` | none | `{status, chunks, model_loaded}` |
+| POST | `/ask` | `{question, previous}`: question 1 to 500 characters, `previous` = the student's last question or `null` | `{answer, sources: [{n, source, page, text}], corrected_query}` |
+| POST | `/feedback` | `{question, answer, comment}` | `201 {saved: true}`. Adds a timestamped JSON line to `feedback.jsonl` (not in git) |
+
+- `sources[].n` is the `[n]` number cited in the answer. Only the excerpts that the answer cites are returned.
+- `corrected_query` is the question after the CAPS/accent/typo fixes, or `null` if nothing changed.
+- Errors: `422` invalid body, `429` more than 20 requests per minute from the same IP, `503` Gemini
+  unavailable (limit reached or servers busy; `detail` is a French message to show to the student),
+  `500` anything else (generic message; the details are only in the server logs).
+- CORS: the allowed origins come from `ALLOWED_ORIGINS` in `.env`, comma-separated
+  (default `http://localhost:5173`, the React dev server).
+
+Example with curl (Git Bash). For questions with accents, prefer the `/docs` page: on Windows, accented
+characters typed on the command line are not always sent as UTF-8, and the API then answers
+`400 There was an error parsing the body`.
+
+```bash
+curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" \
+     -d '{"question": "quand est le forum des entreprises ?", "previous": null}'
+```
+
+```json
+{"answer": "Le forum des entreprises a lieu le 17 novembre pour l'année universitaire 2026-2027 [1].",
+ "sources": [{"n": 1, "source": "Calendrier_de_l'Année_Universitaire_26-27_1_1.pdf", "page": 1,
+              "text": "Calendrier de l'année universitaire 26-27 — 17-nov Forum des entreprises"}],
+ "corrected_query": null}
+```
+
+Tests (retrieval is real and needs `chunks.json` + `embeddings.npy`; Gemini is replaced by a fake):
+
+```powershell
+python -m pytest -q
+```
+
 ## Adding or archiving a document
 
 `documents_status.json` says, for each file in `documents/`, whether it is still in force.
@@ -136,8 +183,13 @@ The test set is small: one question is about 2 points, so these numbers show a t
 - **Vocabulary mismatch.** "Les options en 3ème année informatique" is refused: the current study plan
   never says "option" (it uses "Panier SI / Rx / Emb"), and the footnote that explains the choice is lost
   by the table parser.
-- **The typo fixer can rewrite correct words** that are absent from the documents ("Quel" → "Que").
+- **The typo fixer can rewrite correct words** that are absent from the documents: "quel" → "que",
+  "anciennes" → "antennes", "avant" → "ayant", "menu" → "ment" (visible in the API's `corrected_query`).
   It brings no measurable gain on the test set, which contains no real typos.
+- **Slow answers (40 to 60 s through the API on 2026-11-09).** The first model in `ask.py`'s list
+  (`gemini-3.8-flash`) currently times out; the API gives each model 30 s, then tries the next one.
+- **API rate limit is in memory, per process:** it resets on restart, is not shared between several
+  uvicorn workers, and behind a reverse proxy every client has the proxy's IP.
 - **Archive detection is a word list.** A question about the past without one of those words won't see
   archived documents; a current question containing "avant" will.
 - **No OCR:** scanned PDFs are not read.
@@ -151,6 +203,8 @@ The test set is small: one question is about 2 points, so these numbers show a t
 
 ```
 app.py                 Streamlit chat interface
+api.py                 FastAPI: /ask, /health, /feedback (CORS, rate limit, error mapping)
+tests/test_api.py      API tests (pytest + TestClient, Gemini faked)
 ask.py                 retrieval + Gemini call, model fallback, CLI entry point
 build_prompt.py        query clean-up, retrieval, enumeration/archive detection, prompt rules
 followup.py            merges the previous question for follow-ups ("et en 2ème année ?")
@@ -177,10 +231,10 @@ show_page.py, test_tables.py, check_documents.py, check_years.py, list_semesters
 public/LOGO.jpg        logo shown in the app
 .env.example           template for .env (the real .env is never committed)
 
-Not in git: documents/, chunks.json, embeddings.npy, .env, .venv/
+Not in git: documents/, chunks.json, embeddings.npy, feedback.jsonl, .env, .venv/
 ```
 
 ## Stack
 
 Python 3.10, pypdf, pdfplumber, python-docx, sentence-transformers (`intfloat/multilingual-e5-small`),
-NumPy, Google Gemini API, Streamlit.
+NumPy, Google Gemini API, Streamlit, FastAPI + uvicorn, pytest.
