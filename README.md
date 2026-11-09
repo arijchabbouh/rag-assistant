@@ -4,8 +4,7 @@ A chat assistant that answers students' questions from the school's official doc
 (study plans, academic calendar, student guide, internship forms). Every answer **cites its source**
 (file and page), and the assistant **refuses to answer** when the documents don't contain the information.
 
-![Screenshot of the app](docs/screenshot.png)
-<!-- TODO: add docs/screenshot.png (the app answering a question, ideally with a cited source). -->
+![The React interface answering with a table; citation [2] has opened its source](docs/screenshot.png)
 
 ## How it works
 
@@ -25,7 +24,7 @@ A chat assistant that answers students' questions from the school's official doc
                                                      │ embeddings.npy       │
                                                      │ 384 numbers / chunk  │
                                                      └──────────┬───────────┘
- EACH QUESTION (app.py / ask.py)                                │
+ EACH QUESTION (React → api.py, or app.py)                      │
  ┌──────────┐   ┌─────────────────────┐   ┌─────────────────────▼──────────┐
  │ question │──▶│ clean-up            │──▶│ retrieve (build_prompt.py)     │
  └──────────┘   │ CAPS, accents,      │   │ cosine similarity              │
@@ -36,7 +35,7 @@ A chat assistant that answers students' questions from the school's official doc
                                                                 ▼
  ┌─────────────────────────────┐   ┌──────────────────────────────────────┐
  │ answer + cited file / page  │◀──│ Gemini: rules + numbered excerpts    │
- │ (Streamlit chat)            │   │ "answer only from the excerpts, cite │
+ │ (React or Streamlit chat)   │   │ "answer only from the excerpts, cite │
  └─────────────────────────────┘   │ [n], otherwise say you don't know"   │
                                    └──────────────────────────────────────┘
 ```
@@ -64,6 +63,25 @@ Get a free Gemini API key from Google AI Studio, then:
 ```powershell
 Copy-Item .env.example .env
 notepad .env                        # GEMINI_API_KEY=your_key
+```
+
+Then start **one** of the two interfaces.
+
+**React interface (recommended)**: two terminals. Needs Node.js 20.19+ or 22.12+.
+
+```powershell
+# terminal 1, project folder, .venv activated
+uvicorn api:app --port 8000
+
+# terminal 2
+cd frontend
+npm install                         # first time only
+npm run dev                         # opens http://localhost:5173
+```
+
+**Streamlit interface (older, kept for now)**: one terminal.
+
+```powershell
 streamlit run app.py                # opens http://localhost:8501
 ```
 
@@ -121,6 +139,37 @@ Tests (retrieval is real and needs `chunks.json` + `embeddings.npy`; Gemini is r
 ```powershell
 python -m pytest -q
 ```
+
+## Web interface (React)
+
+`frontend/` is a Vite + React app that calls the API. It never talks to Gemini directly.
+
+- Chat with answers rendered as Markdown, including tables (`react-markdown` + `remark-gfm`).
+- Citations `[n]` are buttons: they open source card n (document, page, excerpt) and move the focus to it.
+- **Arrêter** while an answer is being generated (`AbortController`), **Modifier** on the last question
+  (puts it back in the input; sending replaces the last exchange), **Réessayer** after an error.
+- Follow-ups: each request sends `previous`, the last question that got an answer.
+- **Signaler une réponse fausse** under each answer, with an optional comment → `POST /feedback`.
+- French error messages: 503 quota/busy (the API's own message), 429, 422, server unreachable.
+- 5 example questions on the welcome screen, and a permanent "Vérifiez l'information officielle auprès
+  de l'administration en cas de doute." notice.
+
+Settings:
+
+- **Colours**: CSS variables at the top of `frontend/src/styles.css` (`--primary: #8b1e3f` and its shades).
+  Every text colour has a contrast of at least 6:1 with its background, and borders of interactive elements
+  at least 3:1.
+- **Logo**: `public/LOGO.jpg` at the project root (Vite's `publicDir` points to it, so there is only one copy).
+- **API address**: `VITE_API_URL` (default `http://localhost:8000`); copy `frontend/.env.example` to
+  `frontend/.env.local` to change it. The dev server always uses port 5173, the origin allowed by the
+  API's `ALLOWED_ORIGINS`.
+
+Checked on 2026-11-09 in headless Edge, with real Gemini answers. Desktop 1280 px and mobile 390 px:
+suggestions, loading, citations (in text and in tables), source cards, Arrêter, Modifier, `previous` sent on
+follow-ups, feedback, 503/429/network error messages (faked in the page), keyboard focus, no horizontal
+scroll, no console error. These checks are not automated in the repository yet.
+
+Production build: `npm run build` (output in `frontend/dist/`, not in git).
 
 ## Adding or archiving a document
 
@@ -193,7 +242,10 @@ The test set is small: one question is about 2 points, so these numbers show a t
 - **Archive detection is a word list.** A question about the past without one of those words won't see
   archived documents; a current question containing "avant" will.
 - **No OCR:** scanned PDFs are not read.
-- **Short memory:** the chat only remembers the previous question.
+- **Short memory:** the chat only remembers the previous question, and the React page keeps nothing
+  after a reload.
+- **Arrêter only stops the waiting.** The server finishes its Gemini call anyway, so a stopped question
+  still uses the free quota.
 - **Free Gemini tier:** rate limits. The app tries several models in turn and shows a clear message
   when all are busy.
 - **Parsers depend on file names and layouts** (`PE_`, `Calendrier`, `Guide_`). A new layout may need
@@ -202,7 +254,8 @@ The test set is small: one question is about 2 points, so these numbers show a t
 ## Files
 
 ```
-app.py                 Streamlit chat interface
+app.py                 Streamlit chat interface (older; the React one replaces it)
+frontend/              React interface (Vite): src/App.jsx, src/components/, src/styles.css, src/api.js
 api.py                 FastAPI: /ask, /health, /feedback (CORS, rate limit, error mapping)
 tests/test_api.py      API tests (pytest + TestClient, Gemini faked)
 ask.py                 retrieval + Gemini call, model fallback, CLI entry point
@@ -228,13 +281,16 @@ show_page.py, test_tables.py, check_documents.py, check_years.py, list_semesters
                        small debugging tools (inspect chunks, pages, retrieval)
 
 .streamlit/config.toml interface theme
-public/LOGO.jpg        logo shown in the app
+public/LOGO.jpg        logo shown in both interfaces
+docs/screenshot.png    README screenshot
 .env.example           template for .env (the real .env is never committed)
 
-Not in git: documents/, chunks.json, embeddings.npy, feedback.jsonl, .env, .venv/
+Not in git: documents/, chunks.json, embeddings.npy, feedback.jsonl, .env, .venv/,
+            frontend/node_modules/, frontend/dist/
 ```
 
 ## Stack
 
 Python 3.10, pypdf, pdfplumber, python-docx, sentence-transformers (`intfloat/multilingual-e5-small`),
-NumPy, Google Gemini API, Streamlit, FastAPI + uvicorn, pytest.
+NumPy, Google Gemini API, FastAPI + uvicorn, pytest, React 19 + Vite (react-markdown, remark-gfm),
+Streamlit.

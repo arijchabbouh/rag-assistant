@@ -19,3 +19,7 @@ prompt.txt
 
 # API feedback from users (may contain personal questions)
 feedback.jsonl
+
+# frontend (npm install / npm run build)
+node_modules/
+dist/
