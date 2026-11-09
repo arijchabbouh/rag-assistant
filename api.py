@@ -30,12 +30,33 @@ ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://
 FEEDBACK_FILE = Path(os.environ.get("FEEDBACK_FILE", "feedback.jsonl"))
 RATE_LIMIT = 20          # requests...
 RATE_WINDOW = 60.0       # ...per this many seconds, per client IP
+STATUS_FILE = Path("documents_status.json")   # edited by hand; its "titre" fields name the sources
 
 INTERNAL_ERROR = "Une erreur interne est survenue. Réessayez plus tard."
 TOO_MANY = "Trop de requêtes. Attendez une minute puis réessayez."
 
 # filled once by lifespan(): the modules of the pipeline (they load the model and the embeddings on import)
+# and the documents' titles
 pipeline = {}
+
+
+def load_titles(path=STATUS_FILE):
+    """{file name: title} from the "titre" fields of documents_status.json.
+    A missing or empty title is left out: the file name is shown instead. A broken file gives no titles
+    (and a warning in the logs) rather than stopping the API."""
+    try:
+        documents = json.loads(path.read_text(encoding="utf-8")).get("documents", {})
+    except FileNotFoundError:
+        return {}
+    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError) as e:
+        logger.warning("%s cannot be read (%s): file names are shown instead of titles", path, e)
+        return {}
+    titles = {}
+    for name, info in documents.items():
+        title = info.get("titre") if isinstance(info, dict) else None
+        if isinstance(title, str) and title.strip():
+            titles[name] = title.strip()
+    return titles
 
 
 @asynccontextmanager
@@ -47,9 +68,12 @@ async def lifespan(app):
     import build_prompt
     import followup
 
-    pipeline.update(ask=ask, build_prompt=build_prompt, followup=followup)
-    logger.info("Pipeline loaded: %d chunks, embeddings %s", len(build_prompt.chunks),
-                build_prompt.embeddings.shape)
+    pipeline.update(ask=ask, build_prompt=build_prompt, followup=followup, titles=load_titles())
+    logger.info("Pipeline loaded: %d chunks, embeddings %s, %d document titles", len(build_prompt.chunks),
+                build_prompt.embeddings.shape, len(pipeline["titles"]))
+    untitled = sorted({c["source"] for c in build_prompt.chunks} - set(pipeline["titles"]))
+    if untitled:
+        logger.warning("No \"titre\" in %s for: %s (file name shown instead)", STATUS_FILE, ", ".join(untitled))
     yield
     pipeline.clear()
 
@@ -117,7 +141,8 @@ class AskRequest(BaseModel):
 
 class Source(BaseModel):
     n: int          # the number cited in the answer: [n]
-    source: str
+    source: str     # readable title from documents_status.json ("titre"), or the file name if it has none
+    file: str       # the file name in documents/
     page: int
     text: str
 
@@ -163,6 +188,7 @@ def health():
 @app.post("/ask", response_model=AskResponse, dependencies=[Depends(rate_limited)])
 def ask_endpoint(body: AskRequest):
     bp, ask, followup = pipeline["build_prompt"], pipeline["ask"], pipeline["followup"]
+    titles = pipeline.get("titles", {})
     try:
         answer, sources = followup.ask_with_context(body.question, body.previous or None)
     except ask.GeminiUnavailable as e:
@@ -175,7 +201,8 @@ def ask_endpoint(body: AskRequest):
     numbers = cited_numbers(answer, len(sources))
     return AskResponse(
         answer=answer,
-        sources=[Source(n=n, source=c["source"], page=c["page"], text=c["text"])
+        sources=[Source(n=n, source=titles.get(c["source"], c["source"]), file=c["source"],
+                        page=c["page"], text=c["text"])
                  for n, c in zip(numbers, sources)],
         corrected_query=corrected if corrected != body.question else None,
     )

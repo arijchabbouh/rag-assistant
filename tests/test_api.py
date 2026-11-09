@@ -63,9 +63,46 @@ def test_ask(client, fake_gemini):
     # [1] is a valid citation, [99] is out of range and dropped
     assert [s["n"] for s in body["sources"]] == [1]
     source = body["sources"][0]
-    assert set(source) == {"n", "source", "page", "text"}
+    assert set(source) == {"n", "source", "file", "page", "text"}
     assert source["text"] in fake_gemini[0]     # the cited chunk is the first excerpt of the prompt
     assert "corrected_query" in body
+
+
+def test_sources_show_the_title_from_documents_status(client, fake_gemini):
+    r = client.post("/ask", json={"question": "quand est le forum des entreprises ?"})
+    source = r.json()["sources"][0]
+    assert source["file"] == "Calendrier_de_l'Année_Universitaire_26-27_1_1.pdf"
+    assert source["source"] == api.load_titles()[source["file"]] == "Calendrier universitaire 2026-2027"
+
+
+def test_sources_fall_back_to_the_file_name(client, fake_gemini, monkeypatch):
+    monkeypatch.setitem(api.pipeline, "titles", {})
+    source = client.post("/ask", json={"question": "quand est le forum des entreprises ?"}).json()["sources"][0]
+    assert source["source"] == source["file"]
+
+
+def test_load_titles_skips_missing_and_empty_titles(tmp_path):
+    path = tmp_path / "status.json"
+    path.write_text(json.dumps({"documents": {
+        "a.pdf": {"titre": "  Calendrier  ", "status": "actuel"},
+        "b.pdf": {"status": "actuel"},
+        "c.pdf": {"titre": "", "status": "actuel"},
+        "d.pdf": {"titre": None},
+    }}), encoding="utf-8")
+    assert api.load_titles(path) == {"a.pdf": "Calendrier"}
+
+
+@pytest.mark.parametrize("content", ["{ not json", "[]", ""])
+def test_load_titles_survives_a_broken_file(tmp_path, content):
+    path = tmp_path / "status.json"
+    path.write_text(content, encoding="utf-8")
+    assert api.load_titles(path) == {}
+    assert api.load_titles(tmp_path / "missing.json") == {}
+
+
+def test_every_indexed_document_has_a_title(client):
+    files = {c["source"] for c in api.pipeline["build_prompt"].chunks}
+    assert files <= set(api.pipeline["titles"]), files - set(api.pipeline["titles"])
 
 
 def test_ask_corrected_query(client, fake_gemini):

@@ -2,69 +2,82 @@
   "_lisez_moi": [
     "Ce fichier dit, pour chaque document du dossier documents/, s'il est encore en vigueur.",
     "Il se modifie à la main dans un éditeur de texte, sans toucher au code Python. Ce sera la base de la future page d'administration.",
+    "titre : le nom affiché à l'étudiant pour ce document (cartes de sources et citations). Facultatif : sans titre, le nom du fichier est affiché. Après modification, redémarrer l'API (uvicorn) suffit.",
     "status : \"actuel\" = utilisé pour répondre. \"archive\" = ignoré, sauf si la question demande explicitement l'ancien (mots : ancien, avant, archive, précédent, \"en 2017\"...).",
     "annee_scolaire : l'année de l'édition du document (pas sa durée de validité). null quand le document ne porte aucune date.",
     "note : texte libre, facultatif. Sert à se souvenir pourquoi un statut a été choisi.",
     "Un fichier présent dans documents/ mais absent d'ici est traité comme \"actuel\" (un avertissement s'affiche pendant le découpage).",
-    "Après toute modification, relancer : python chunk_documents.py  (les embeddings ne changent pas si seuls les statuts changent)."
+    "Après une modification de status, relancer : python chunk_documents.py  (les embeddings ne changent pas si seuls les statuts changent). Pour un titre seul, redémarrer l'API suffit."
   ],
   "documents": {
     "Autorisation_soutenance_PFE.pdf": {
+      "titre": "Autorisation de soutenance du PFE",
       "status": "actuel",
       "annee_scolaire": null,
       "note": "Formulaire sans date."
     },
     "Avenant_de_fin_de_stage_PFE.pdf": {
+      "titre": "Avenant de fin de stage PFE",
       "status": "actuel",
       "annee_scolaire": "2024-2025",
       "note": "Formulaire. Mentionne la session « Juillet / Septembre 2025 » : à vérifier, une version plus récente existe peut-être."
     },
     "Avenant_de_prolongation_de_stage_d'été.pdf": {
+      "titre": "Avenant de prolongation de stage d'été",
       "status": "actuel",
       "annee_scolaire": null,
       "note": "Formulaire sans date."
     },
     "Calendrier_de_l'Année_Universitaire_26-27_1_1.pdf": {
+      "titre": "Calendrier universitaire 2026-2027",
       "status": "actuel",
       "annee_scolaire": "2026-2027",
       "note": "À passer en archive quand le calendrier 2027-2028 sera ajouté."
     },
     "demandeDepart.pdf": {
+      "titre": "Demande d'attestation de départ (arabe)",
       "status": "actuel",
       "annee_scolaire": null,
       "note": "Formulaire en arabe (demande d'attestation de départ), année à remplir par l'étudiant."
     },
     "Guide_de_l'élève_ingénieur_2024-2025.pdf": {
+      "titre": "Guide de l'élève ingénieur 2024-2025",
       "status": "actuel",
       "annee_scolaire": "2024-2025",
       "note": "Validé par le conseil scientifique le 27 août 2024. Édition la plus récente disponible : à remplacer si un guide 2026-2027 est publié."
     },
     "INTERNSHIP_AGREEMENT-_FINAL_YEAR_PROJECT_Convention_PFE_en_anglais.pdf": {
+      "titre": "Convention de stage PFE (anglais)",
       "status": "actuel",
       "annee_scolaire": null,
       "note": "Convention de PFE en anglais, sans date."
     },
     "PE_GSIL_Validé_CS_27_aout_2024_Version_Finale.pdf": {
+      "titre": "Plan d'études GSIL",
       "status": "actuel",
       "annee_scolaire": "2024-2025",
       "note": "Plan d'études GSIL, validé CS 27 août 2024."
     },
     "PE_GSInfotroniques.pdf": {
+      "titre": "Plan d'études GSInfotroniques",
       "status": "actuel",
       "annee_scolaire": "2024-2025",
       "note": "Plan d'études GSInfotroniques, validé CS 27 août 2024."
     },
     "PE_Informatique_Janvier_2026.pdf": {
+      "titre": "Plan d'études Informatique",
       "status": "actuel",
       "annee_scolaire": "2025-2026",
       "note": "Plan d'études Informatique, version janvier 2026 (1re année validée CS 29 août 2025, 2e et 3e années validées CS 27 août 2024). En 3e année : tronc commun + paniers SI / Rx / Emb, plus de spécialités nommées."
     },
     "PE_Mecatronique.pdf": {
+      "titre": "Plan d'études Mécatronique",
       "status": "actuel",
       "annee_scolaire": "2023-2024",
       "note": "Plan d'études Mécatronique, validations CS d'octobre 2022 à octobre 2023."
     },
     "Plaquette_Dep_Informatique_2017.pdf": {
+      "titre": "Plaquette du département Informatique (2017)",
       "status": "archive",
       "annee_scolaire": "2017",
       "note": "Plaquette de 2017. Décrit trois spécialités de 3e année (Systèmes d'Information, Systèmes Embarqués, Réseaux) qui n'existent plus sous cette forme dans le plan d'études actuel."

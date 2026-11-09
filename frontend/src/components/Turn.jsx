@@ -3,6 +3,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Feedback from "./Feedback.jsx";
 import Sources from "./Sources.jsx";
+import { sourceTitle } from "../sourceTitle.js";
 
 // "[2]" in the answer becomes a link "#cite-2", rendered as a button that opens source 2.
 // Numbers without a matching source are left as plain text.
@@ -58,8 +59,8 @@ export default function Turn({ turn, beingEdited, onEdit, onRetry }) {
             type="button"
             className="cite"
             onClick={() => openCitation(n)}
-            aria-label={`Source ${n} : ${source.source}, page ${source.page}`}
-            title={`${source.source}, page ${source.page}`}
+            aria-label={`Source ${n} : ${sourceTitle(source)}, page ${source.page}`}
+            title={`${sourceTitle(source)}, page ${source.page}`}
           >
             {n}
           </button>

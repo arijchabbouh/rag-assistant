@@ -4,7 +4,7 @@ A chat assistant that answers students' questions from the school's official doc
 (study plans, academic calendar, student guide, internship forms). Every answer **cites its source**
 (file and page), and the assistant **refuses to answer** when the documents don't contain the information.
 
-![The React interface answering with a table; citation [2] has opened its source](docs/screenshot.png)
+![The React interface answering with a table; citation [1] has opened its source, shown by its title](docs/screenshot.png)
 
 ## How it works
 
@@ -107,10 +107,12 @@ also try each endpoint: http://localhost:8000/docs
 | Method | Path | Body | Response |
 |---|---|---|---|
 | GET | `/health` | none | `{status, chunks, model_loaded}` |
-| POST | `/ask` | `{question, previous}`: question 1 to 500 characters, `previous` = the student's last question or `null` | `{answer, sources: [{n, source, page, text}], corrected_query}` |
+| POST | `/ask` | `{question, previous}`: question 1 to 500 characters, `previous` = the student's last question or `null` | `{answer, sources: [{n, source, file, page, text}], corrected_query}` |
 | POST | `/feedback` | `{question, answer, comment}` | `201 {saved: true}`. Adds a timestamped JSON line to `feedback.jsonl` (not in git) |
 
 - `sources[].n` is the `[n]` number cited in the answer. Only the excerpts that the answer cites are returned.
+- `sources[].source` is the document's readable title (`titre` in `documents_status.json`), or its file
+  name when it has none; `sources[].file` is always the file name.
 - `corrected_query` is the question after the CAPS/accent/typo fixes, or `null` if nothing changed.
 - Errors: `422` invalid body, `429` more than 20 requests per minute from the same IP, `503` Gemini
   unavailable (limit reached or servers busy; `detail` is a French message to show to the student),
@@ -145,7 +147,8 @@ python -m pytest -q
 `frontend/` is a Vite + React app that calls the API. It never talks to Gemini directly.
 
 - Chat with answers rendered as Markdown, including tables (`react-markdown` + `remark-gfm`).
-- Citations `[n]` are buttons: they open source card n (document, page, excerpt) and move the focus to it.
+- Citations `[n]` are buttons: they open source card n (document title, page, excerpt) and move the focus
+  to it. Cards and citations show the document's `titre`; the file name is in the tooltip.
 - **Arrêter** while an answer is being generated (`AbortController`), **Modifier** on the last question
   (puts it back in the input; sending replaces the last exchange), **Réessayer** after an error.
 - Follow-ups: each request sends `previous`, the last question that got an answer.
@@ -173,30 +176,38 @@ Production build: `npm run build` (output in `frontend/dist/`, not in git).
 
 ## Adding or archiving a document
 
-`documents_status.json` says, for each file in `documents/`, whether it is still in force.
-It is edited by hand; no Python change is needed.
+`documents_status.json` says, for each file in `documents/`, how to show it and whether it is still in
+force. It is edited by hand; no Python change is needed.
 
 ```json
 "Plaquette_Dep_Informatique_2017.pdf": {
+  "titre": "Plaquette du département Informatique (2017)",
   "status": "archive",
   "annee_scolaire": "2017",
   "note": "Describes 3rd-year specialities that no longer exist."
 }
 ```
 
-- `"actuel"`: used to answer.
-- `"archive"`: left out of the search, **unless** the question asks about the past
-  (`ancien`, `avant`, `archive`, `précédent`, `en 2017`...). When an archived excerpt is used,
+- `titre`: the name the student sees on source cards and citations, instead of the file name.
+  Short and explicit: the kind of document, the programme, the year if it matters
+  ("Calendrier universitaire 2026-2027", "Plan d'études Informatique", "Convention de stage PFE (anglais)").
+  Optional: without it the file name is shown, and the API logs a warning at startup.
+- `status`: `"actuel"` = used to answer. `"archive"` = left out of the search, **unless** the question asks
+  about the past (`ancien`, `avant`, `archive`, `précédent`, `en 2017`...). When an archived excerpt is used,
   the answer says that it comes from an old document.
 
-**Add a document:** copy the file into `documents/`, add an entry in `documents_status.json`,
-then run `python chunk_documents.py` and `python embed_chunks.py`.
+**Add a document:** copy the file into `documents/`, add an entry in `documents_status.json` with its
+`titre` and `status` (copy an existing entry and keep the file name as the key, exactly), then run
+`python chunk_documents.py` and `python embed_chunks.py`.
 A file missing from `documents_status.json` is treated as `actuel` and a warning is printed.
 
 **Archive a document** (for example when next year's calendar arrives): change its `status` to
 `"archive"` and run `python chunk_documents.py`, then `python embed_chunks.py`.
 
-Restart the Streamlit app after any change: the chunks are loaded once at startup.
+**Rename a document for students:** change its `titre`, then restart the API. Nothing to re-run.
+
+Restart the API (or the Streamlit app) after any change: everything is loaded once at startup.
+The Streamlit app still shows file names.
 
 ## Evaluation results
 

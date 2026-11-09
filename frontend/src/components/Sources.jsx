@@ -1,9 +1,5 @@
 import { useId } from "react";
-
-// "PE_Informatique_Janvier_2026.pdf" -> "PE Informatique Janvier 2026"
-function documentName(file) {
-  return file.replace(/\.(pdf|docx)$/i, "").replace(/_+/g, " ").trim();
-}
+import { sourceTitle } from "../sourceTitle.js";
 
 export default function Sources({ ref, sources, open, onToggle }) {
   const baseId = useId();
@@ -25,7 +21,7 @@ export default function Sources({ ref, sources, open, onToggle }) {
                 onClick={() => onToggle(s.n)}
               >
                 <span className="source-n" aria-hidden="true">{s.n}</span>
-                <span className="source-doc" title={s.source}>{documentName(s.source)}</span>
+                <span className="source-doc" title={s.file || s.source}>{sourceTitle(s)}</span>
                 <span className="source-page">page {s.page}</span>
                 <span className="source-chevron" aria-hidden="true" />
               </button>
