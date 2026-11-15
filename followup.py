@@ -1,7 +1,7 @@
 import re
 from itertools import zip_longest
 
-from ask import generate
+from ask import cited_sources, generate, retry_after_refusal
 from build_prompt import retrieve, build_prompt, top_k_for
 
 # beginnings that show the question continues the previous one ("et les DS ?", "pareil pour...")
@@ -40,6 +40,5 @@ def ask_with_context(question, previous=None):
         shown = question
 
     answer = generate(build_prompt(shown, selected))
-    cited = sorted({int(n) for n in re.findall(r"\[(\d+)\]", answer)})
-    sources = [selected[n - 1] for n in cited if 1 <= n <= len(selected)]
-    return answer, sources
+    answer, selected = retry_after_refusal(question, answer, selected, previous)
+    return answer, cited_sources(answer, selected)

@@ -211,22 +211,22 @@ The Streamlit app still shows file names.
 
 ## Evaluation results
 
-Test set: 52 questions written by hand (`eval_questions.json`). For each question, the file and the text
+Test set: 62 questions written by hand (`eval_questions.json`). For each question, the file and the text
 that the right chunk must contain. Four types: `direct` (close to the document's wording), `paraphrase`,
-`noisy` (abbreviations, no accents), `crosslingual` (question and document in different languages).
+`noisy` (abbreviations, no accents, fragments such as "forum entreprises date"), `crosslingual` (question and document in different languages).
 
 - **hit@k**: the right chunk is among the first k results.
 - **MRR**: average of 1/rank of the right chunk (1 = always first).
 
-Latest run (2026-11-09, retrieval only, the top 8 chunks go to the LLM):
+Latest run (2026-11-15, retrieval only, the top 8 chunks go to the LLM):
 
 | Type | Questions | hit@1 | hit@3 | hit@5 | hit@8 | MRR |
 |---|---|---|---|---|---|---|
 | direct | 26 | 85% | 96% | 100% | 100% | 0.901 |
 | paraphrase | 16 | 69% | 75% | 75% | 75% | 0.708 |
-| noisy | 7 | 71% | 86% | 100% | 100% | 0.798 |
+| noisy | 17 | 71% | 82% | 88% | 88% | 0.770 |
 | crosslingual | 3 | 33% | 67% | 67% | 100% | 0.492 |
-| **all** | **52** | **75%** | **87%** | **90%** | **92%** | **0.804** |
+| **all** | **62** | **74%** | **85%** | **89%** | **90%** | **0.795** |
 
 Every measured change is one line in [results.md](results.md) (`python evaluate.py "what changed"`).
 Design choices and the alternatives considered are in [DECISIONS.md](DECISIONS.md).
@@ -238,6 +238,11 @@ The test set is small: one question is about 2 points, so these numbers show a t
 - **Answers can be wrong.** Always check the cited source.
 - **Only retrieval is evaluated.** The answers written by the LLM, including refusals, are not scored yet.
 - **Paraphrases are the weak spot:** 4 of 16 reworded questions never get the right chunk in the top 8.
+- **A refused question gets one more try**: the model rewrites it as a clear question, the search runs
+  again, the model answers again (two more Gemini calls, only on refusals). A second refusal is kept, with
+  "Essayez de reformuler votre question avec plus de détails (filière, année)." It does not always help:
+  on 2026-11-15 it recovered "PFE durée minimum" once out of two runs, and never "Le rapport de PFE
+  confidentiel ?" (the answer is in the English agreement, rank 26 for the rewritten question).
 - **"List everything" questions are partial.** They get 25 chunks, but the calendar alone has 50 lines:
   "toutes les dates du calendrier" returns part of them, with a warning that the list may be incomplete.
 - **Vocabulary mismatch is fixed by hand, word by word.** Students say "options", the Informatique study
@@ -287,7 +292,7 @@ embed_chunks.py        chunks.json -> embeddings.npy
 documents_status.json  actuel / archive for each document (edited by hand)
 
 evaluate.py            hit@k and MRR on eval_questions.json, appends to results.md
-eval_questions.json    52 hand-written test questions
+eval_questions.json    62 hand-written test questions
 add_question.py        helper to add a test question
 results.md             history of every measured change
 DECISIONS.md           design choices, alternatives, known weaknesses

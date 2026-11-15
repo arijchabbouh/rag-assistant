@@ -9,3 +9,5 @@
 | 2026-11-09 | Gemini client timeout 30 s in ask.py, models reordered (flash-lite first, 3.8-flash removed): generation only | 52 | 73% | 87% | 92% | 92% | 0.796 |
 | 2026-11-09 | Typo fixer never rewrites correct French (word list, accents only on accent-less words, inflections kept) | 52 | 75% | 87% | 90% | 92% | 0.804 |
 | 2026-11-09 | Study-plan footnotes indexed (+5 chunks, 503) and option -> panier d'option synonyms (search + prompt) | 52 | 75% | 87% | 90% | 92% | 0.804 |
+| 2026-11-15 | Eval v3: +10 fragmentary noisy questions (62) | 62 | 74% | 85% | 89% | 90% | 0.795 |
+| 2026-11-15 | Retry after refusal: rephrase with Gemini, search again once (generation only) | 62 | 74% | 85% | 89% | 90% | 0.795 |

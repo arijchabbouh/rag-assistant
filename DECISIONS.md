@@ -100,6 +100,31 @@ Lost on purpose: "infotronique" → "infotroniques" (singular/plural, left to th
 Alternative: a glossary in the prompt rules for every question (more tokens on every question, for one word).
 Eval unchanged (no eval question is about Informatique options): kept as `tests/test_synonyms.py`.
 
+## One more try after a refusal (2026-11-15)
+
+10 fragmentary questions were added to the eval (type `noisy`, 62 questions): "forum entreprises date",
+"coef regulation meca", "PFE durée minimum"... Each checked with `add_question.py` (one matching chunk).
+Diagnosis, end to end with Gemini: 8 answered; the 2 refusals were search failures (right chunk at rank 18,
+and outside the top 25), not the model refusing a good excerpt.
+**Fix:** when the answer is the refusal sentence, the model rewrites the question as a clear, self-contained
+one (temperature 0, the student's acronyms kept, nothing added), the search runs again on it and the model
+answers again, once. A second refusal is kept, followed by "Essayez de reformuler votre question avec plus de
+détails (filière, année)." Answered questions cost nothing more; refused ones cost two more calls (rewrite +
+answer), not one.
+Checked on real runs: "quel est le menu de la cantine" and "combien de semaines dure chaque matière" stay
+refused; good questions are answered in one call. Recovered: "PFE durée minimum" in 1 run out of 2 (the
+model sometimes refuses the guide's "quinze semaines réservées au PFE", which does not say "minimum"; the
+documents also disagree: 15 weeks in the agreement and the guide, "Minimum 16 semaines" in the study plans).
+Not recovered: "Le rapport de PFE  confidentiel ?" → "Le rapport de PFE est-il confidentiel ?", whose answer
+(in the English agreement) is at rank 26; "peut-il être confidentiel" would be rank 7. Not tuned further:
+fitting the rewrite prompt to two eval questions would be tuning on the test.
+Rewrite prompt lessons: without constraints it added assumptions ("les modalités pour rendre le rapport
+confidentiel") and the school's name; spelling out "PFE" lost the English chunk (the search expands acronyms
+itself), so acronyms written by the student are kept.
+Alternatives: always rewrite before searching (one more call on every question, and it can damage good
+questions); a reranker (new model to run).
+evaluate.py is unchanged by this (it measures retrieval only): 74% / 85% / 89% / 90%, MRR 0.795.
+
 ## Known weaknesses, not fixed yet
 
 - A "list everything" question sees 25 chunks: "quelles sont toutes les dates du calendrier" returns 25

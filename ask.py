@@ -62,13 +62,15 @@ def is_missing_model(error):
     return getattr(error, "code", None) == 404 or "not_found" in text or "not found" in text
 
 
-def generate(prompt):
-    """Ask Gemini. If a model is over its limit or busy, try the next one; if all fail, wait once and retry."""
+def generate(prompt, temperature=None):
+    """Ask Gemini. If a model is over its limit or busy, try the next one; if all fail, wait once and retry.
+    temperature=0 gives (almost) the same text every time: used to rephrase questions."""
+    config = types.GenerateContentConfig(temperature=temperature) if temperature is not None else None
     last_error = None
     for round_number in range(2):
         for model in MODELS:
             try:
-                response = client.models.generate_content(model=model, contents=prompt)
+                response = client.models.generate_content(model=model, contents=prompt, config=config)
                 if model != MODELS[0]:
                     print(f"(modèle utilisé : {model})")
                 return response.text or "Je n'ai pas pu générer de réponse."
@@ -83,15 +85,75 @@ def generate(prompt):
     raise GeminiUnavailable(LIMIT_MESSAGE if last_error and is_rate_limit(last_error) else BUSY_MESSAGE) from last_error
 
 
+# ------------------------------------------------------------- refusals: one more try
+
+REFUSAL = "Je ne trouve pas cette information dans les documents fournis."   # rule 3 of the prompt
+REPHRASE_HINT = "Essayez de reformuler votre question avec plus de détails (filière, année)."
+
+REPHRASE_PROMPT = """Un étudiant de l'École Nationale d'Ingénieurs de Carthage a posé la question ci-dessous \
+à un assistant qui cherche dans les documents officiels de l'école. Elle est peut-être fragmentaire, abrégée \
+ou mal tournée.
+Réécris-la en UNE question claire, complète et autonome, en français : une phrase entière, des mots complets, \
+sans fautes. Si l'étudiant a écrit un sigle de l'école (PFE, PFA, CC, DS, SP, SR, UE), garde-le tel quel : \
+la recherche le connaît. N'ajoute pas de sigle qu'il n'a pas écrit.\
+{context}
+Garde le sens exact et les mots de l'étudiant : ajoute seulement ce qui manque pour faire une phrase (verbe, \
+article, mot interrogatif). Ne suppose rien de plus que la question.
+N'ajoute aucune information absente de la question : pas de filière, d'année, de date ni de chiffre inventés, \
+et pas le nom de l'école. Reste courte.
+Exemples :
+« stage ete duree ? » -> Quelle est la durée du stage d'été ?
+« bourse demande ou » -> Où faut-il faire une demande de bourse ?
+Réponds uniquement par la question réécrite, sans guillemets ni explication.
+
+Question : {question}"""
+
+
+def is_refusal(answer):
+    """True when the model answered with the refusal sentence (possibly followed by a comment)."""
+    return answer.strip().lstrip("«\"' ").startswith(REFUSAL[:34])   # "Je ne trouve pas cette information"
+
+
+def rephrase(question, previous=None):
+    """Ask the model for a clear, self-contained version of the question. Returns the question unchanged
+    if the model gives nothing usable."""
+    context = (f"\nElle suit peut-être la question précédente de l'étudiant : « {previous} ». "
+               f"Si c'est le cas, intègre ce contexte pour que la question se comprenne seule.") if previous else ""
+    text = generate(REPHRASE_PROMPT.format(question=question, context=context), temperature=0).strip()
+    text = text.splitlines()[0].strip().strip("«»\"' ") if text else ""
+    return text if 0 < len(text) <= 500 else question
+
+
+def cited_sources(answer, selected):
+    """The chunks cited as [n] in the answer."""
+    cited = sorted({int(n) for n in re.findall(r"\[(\d+)\]", answer)})
+    return [selected[n - 1] for n in cited if 1 <= n <= len(selected)]
+
+
+def retry_after_refusal(question, answer, selected, previous=None):
+    """A refused question gets ONE more try: the model rewrites it as a clear question, the search runs again
+    on the rewritten question, and the model answers again. A second refusal is kept, with a hint.
+    Costs nothing for answered questions, two more calls for refused ones. Returns (answer, selected)."""
+    if not is_refusal(answer):
+        return answer, selected
+    try:
+        clear = rephrase(question, previous)
+        if clear.strip().lower() != question.strip().lower():
+            retried = retrieve(clear)
+            answer2 = generate(build_prompt(f"{clear}\n(Question posée par l'étudiant : « {question} ».)", retried))
+            if not is_refusal(answer2):
+                return answer2, retried
+    except GeminiUnavailable:
+        pass    # no second chance right now: keep the first refusal
+    return f"{answer.strip()}\n\n{REPHRASE_HINT}", selected
+
+
 def ask(question):
     """Search the documents, ask the LLM, return (answer, cited_chunks)."""
     selected = retrieve(question)
-    prompt = build_prompt(question, selected)
-    answer = generate(prompt)
-
-    cited = sorted({int(n) for n in re.findall(r"\[(\d+)\]", answer)})
-    sources = [selected[n - 1] for n in cited if 1 <= n <= len(selected)]
-    return answer, sources
+    answer = generate(build_prompt(question, selected))
+    answer, selected = retry_after_refusal(question, answer, selected)
+    return answer, cited_sources(answer, selected)
 
 
 if __name__ == "__main__":

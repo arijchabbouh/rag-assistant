@@ -420,5 +420,86 @@
       "الوثائق المطلوبة"
     ],
     "type": "crosslingual"
+  },
+  {
+    "question": "Le rapport de PFE  confidentiel ?",
+    "source": "INTERNSHIP_AGREEMENT",
+    "keywords": [
+      "FYP report cannot be confidential"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "forum entreprises date",
+    "source": "Calendrier",
+    "keywords": [
+      "Forum des entreprises"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "coef regulation meca",
+    "source": "PE_Mecatronique",
+    "keywords": [
+      "Régulation des systèmes linéaires",
+      "Crédits/coefficient"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "absence examen quoi faire",
+    "source": "Guide",
+    "keywords": [
+      "sanctionnée par la note zéro"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "PFE durée minimum",
+    "source": "INTERNSHIP_AGREEMENT",
+    "keywords": [
+      "minimum duration of the internship is 15 weeks"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "redoublement combien de fois",
+    "source": "Guide",
+    "keywords": [
+      "redoublement est autorisé une seule fois"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "trop d'absences dans un module",
+    "source": "Guide",
+    "keywords": [
+      "dépassent les 20%"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "remise diplomes quand",
+    "source": "Calendrier",
+    "keywords": [
+      "remise des diplômes"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "exams sp s2 dates",
+    "source": "Calendrier",
+    "keywords": [
+      "session principale du second semestre"
+    ],
+    "type": "noisy"
+  },
+  {
+    "question": "poster stage ete depot",
+    "source": "Calendrier",
+    "keywords": [
+      "Dépôt poster"
+    ],
+    "type": "noisy"
   }
 ]
