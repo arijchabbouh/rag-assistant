@@ -11,3 +11,4 @@
 | 2026-11-09 | Study-plan footnotes indexed (+5 chunks, 503) and option -> panier d'option synonyms (search + prompt) | 52 | 75% | 87% | 90% | 92% | 0.804 |
 | 2026-11-15 | Eval v3: +10 fragmentary noisy questions (62) | 62 | 74% | 85% | 89% | 90% | 0.795 |
 | 2026-11-15 | Retry after refusal: rephrase with Gemini, search again once (generation only) | 62 | 74% | 85% | 89% | 90% | 0.795 |
+| 2026-11-15 | Rule 7: Source column only for several documents (generation only); sources grouped in the front | 62 | 74% | 85% | 89% | 90% | 0.795 |

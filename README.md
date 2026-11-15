@@ -4,7 +4,7 @@ A chat assistant that answers students' questions from the school's official doc
 (study plans, academic calendar, student guide, internship forms). Every answer **cites its source**
 (file and page), and the assistant **refuses to answer** when the documents don't contain the information.
 
-![The React interface answering with a table; citation [1] has opened its source, shown by its title](docs/screenshot.png)
+![The React interface: "quelles sont toutes les dates du calendrier ?" answered with a table; its 25 excerpts are grouped in one source card, and citation [6] has opened excerpt 6](docs/screenshot.png)
 
 ## How it works
 
@@ -147,8 +147,11 @@ python -m pytest -q
 `frontend/` is a Vite + React app that calls the API. It never talks to Gemini directly.
 
 - Chat with answers rendered as Markdown, including tables (`react-markdown` + `remark-gfm`).
-- Citations `[n]` are buttons: they open source card n (document title, page, excerpt) and move the focus
-  to it. Cards and citations show the document's `titre`; the file name is in the tooltip.
+- Citations `[n]` are buttons: they open the card holding excerpt n and move the focus to that excerpt.
+- Sources are grouped by document and page: one card "Calendrier universitaire 2026-2027 · page 1 ·
+  25 extraits" instead of 25 identical cards. Opened, it lists the excerpts with their numbers; the context
+  they share ("Calendrier de l'année universitaire 26-27") is shown once. Cards and citations show the
+  document's `titre`; the file name is in the tooltip.
 - **Arrêter** while an answer is being generated (`AbortController`), **Modifier** on the last question
   (puts it back in the input; sending replaces the last exchange), **Réessayer** after an error.
 - Follow-ups: each request sends `previous`, the last question that got an answer.

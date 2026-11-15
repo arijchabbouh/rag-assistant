@@ -125,6 +125,20 @@ Alternatives: always rewrite before searching (one more call on every question, 
 questions); a reranker (new model to run).
 evaluate.py is unchanged by this (it measures retrieval only): 74% / 85% / 89% / 90%, MRR 0.795.
 
+## Sources grouped by document and page (2026-11-15)
+
+"Quelles sont toutes les dates du calendrier ?" cites 25 calendar lines: the interface showed 25 identical
+cards "Calendrier universitaire 2026-2027, page 1", and the answer's table had a "Source" column repeating
+the same document. Now:
+- the React interface groups the cited excerpts by document and page (`frontend/src/groupSources.js`); a
+  card lists its excerpts with their numbers, so a citation [n] opens the right card and focuses excerpt n;
+  the " — " context shared by all excerpts of a card is shown once;
+- RULES (rule 7): a "Source" column only when the rows come from several documents; otherwise the citation
+  goes at the end of each row's last cell. Without an example the model still added the column in 1 table
+  out of 4; with the example in the rule, 0 out of 6. With several documents it chose to keep the citations
+  in the cells (the "Filière" column already tells the rows apart): allowed by the rule.
+Alternative: deduplicate in the API (would change the [n] numbering that the answer text relies on).
+
 ## Known weaknesses, not fixed yet
 
 - A "list everything" question sees 25 chunks: "quelles sont toutes les dates du calendrier" returns 25

@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 import Feedback from "./Feedback.jsx";
 import Sources from "./Sources.jsx";
 import { sourceTitle } from "../sourceTitle.js";
+import { groupKeyOf, groupSources } from "../groupSources.js";
 
 // "[2]" in the answer becomes a link "#cite-2", rendered as a button that opens source 2.
 // Numbers without a matching source are left as plain text.
@@ -26,25 +27,27 @@ export default function Turn({ turn, beingEdited, onEdit, onRetry }) {
     () => (turn.status === "done" ? linkCitations(turn.answer, sources) : ""),
     [turn.status, turn.answer, sources],
   );
+  const groups = useMemo(() => groupSources(sources), [sources]);
 
-  // after a citation click: the card is open, now bring it into view and give it the focus
+  // after a citation click: its card is open, now bring excerpt n into view and give it the focus
   useEffect(() => {
     if (focusSource == null) return;
-    const card = sourcesRef.current?.querySelector(`[data-source="${focusSource}"]`);
-    card?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    card?.querySelector("button")?.focus({ preventScroll: true });
+    const item = sourcesRef.current?.querySelector(`[data-source="${focusSource}"]`);
+    item?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    item?.focus({ preventScroll: true });
     setFocusSource(null);
   }, [focusSource]);
 
   function openCitation(n) {
-    setOpenSources((current) => new Set(current).add(n));
+    const key = groupKeyOf(groups, n);
+    if (key) setOpenSources((current) => new Set(current).add(key));
     setFocusSource(n);
   }
 
-  function toggleSource(n) {
+  function toggleSource(key) {
     setOpenSources((current) => {
       const next = new Set(current);
-      next.has(n) ? next.delete(n) : next.add(n);
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   }
@@ -132,7 +135,7 @@ export default function Turn({ turn, beingEdited, onEdit, onRetry }) {
             </div>
             <Sources
               ref={sourcesRef}
-              sources={sources}
+              groups={groups}
               open={openSources}
               onToggle={toggleSource}
             />
