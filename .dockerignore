@@ -1,0 +1,23 @@
+# Never in the image: school documents, secrets, local environments, user feedback.
+documents/
+listes-etudiants/
+a_ocr/
+mise_de_cote/
+plus_tard/
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+**/__pycache__/
+node_modules/
+**/node_modules/
+frontend/dist/
+feedback.jsonl
+prompt.txt
+.git/
+.streamlit/
+space_build/
+tests/
+docs/
+*.md

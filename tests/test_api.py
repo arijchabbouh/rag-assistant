@@ -172,3 +172,24 @@ def test_cors_allows_react_dev_server(client):
     r = client.options("/ask", headers={"Origin": "http://evil.example",
                                         "Access-Control-Request-Method": "POST"})
     assert "access-control-allow-origin" not in r.headers
+
+
+# ------------------------------------------------------------------ web page served by the API
+
+needs_build = pytest.mark.skipif(not (api.FRONTEND_DIST / "index.html").exists(),
+                                 reason="frontend not built (npm run build in frontend/)")
+
+
+@needs_build
+def test_root_serves_the_web_page(client):
+    r = client.get("/")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    assert "Assistant ENICarthage" in r.text
+
+
+@needs_build
+def test_api_routes_keep_priority_over_the_page(client):
+    assert client.get("/health").json()["status"] == "ok"
+    assert client.get("/LOGO.jpg").headers["content-type"] == "image/jpeg"
+    assert client.get("/no-such-file.js").status_code == 404

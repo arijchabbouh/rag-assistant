@@ -135,7 +135,8 @@ export default function App() {
       <footer className="footer">
         <p className="disclaimer" role="note">
           <span aria-hidden="true">⚠ </span>
-          Vérifiez l'information officielle auprès de l'administration en cas de doute.
+          Vérifiez l'information officielle auprès de l'administration en cas de doute.{" "}
+          <strong>Ne saisissez pas de données personnelles.</strong>
         </p>
         <Composer
           ref={composer}

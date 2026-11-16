@@ -1,6 +1,9 @@
 // Calls to the FastAPI server (api.py). Every error becomes an ApiError with a French message.
 
-export const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
+// Empty = same origin as the page ("/ask"): api.py serves the page in production, and Vite forwards the calls
+// to the API in development (vite.config.js). Set VITE_API_URL only to call an API on another origin
+// (that origin must then be in the API's ALLOWED_ORIGINS).
+export const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
 export class ApiError extends Error {
   constructor(kind, title, message) {
@@ -44,7 +47,8 @@ async function post(path, body, signal) {
     throw new ApiError(
       "network",
       "Serveur injoignable",
-      `Impossible de contacter l'API (${API_URL}). Vérifiez qu'elle est lancée : uvicorn api:app --port 8000`,
+      `Impossible de contacter le serveur (${API_URL || window.location.origin}). Vérifiez votre connexion, ` +
+        "puis réessayez. En développement : l'API est-elle lancée (uvicorn api:app --port 8000) ?",
     );
   }
   let data = null;

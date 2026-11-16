@@ -117,8 +117,11 @@ also try each endpoint: http://localhost:8000/docs
 - Errors: `422` invalid body, `429` more than 20 requests per minute from the same IP, `503` Gemini
   unavailable (limit reached or servers busy; `detail` is a French message to show to the student),
   `500` anything else (generic message; the details are only in the server logs).
-- CORS: the allowed origins come from `ALLOWED_ORIGINS` in `.env`, comma-separated
-  (default `http://localhost:5173`, the React dev server).
+- The web page is served by the API itself at `/` when `frontend/dist/` exists (`npm run build`), so in
+  production the page and the API share one origin. In development, Vite forwards `/ask`, `/feedback` and
+  `/health` to the API (same origin too).
+- CORS is only needed for a page on **another** origin: `ALLOWED_ORIGINS` in `.env`, comma-separated
+  (default `http://localhost:5173`).
 
 Example with curl (Git Bash). For questions with accents, prefer the `/docs` page: on Windows, accented
 characters typed on the command line are not always sent as UTF-8, and the API then answers
@@ -131,7 +134,8 @@ curl -X POST http://localhost:8000/ask -H "Content-Type: application/json" \
 
 ```json
 {"answer": "Le forum des entreprises a lieu le 17 novembre pour l'année universitaire 2026-2027 [1].",
- "sources": [{"n": 1, "source": "Calendrier_de_l'Année_Universitaire_26-27_1_1.pdf", "page": 1,
+ "sources": [{"n": 1, "source": "Calendrier universitaire 2026-2027",
+              "file": "Calendrier_de_l'Année_Universitaire_26-27_1_1.pdf", "page": 1,
               "text": "Calendrier de l'année universitaire 26-27 — 17-nov Forum des entreprises"}],
  "corrected_query": null}
 ```
@@ -157,8 +161,8 @@ python -m pytest -q
 - Follow-ups: each request sends `previous`, the last question that got an answer.
 - **Signaler une réponse fausse** under each answer, with an optional comment → `POST /feedback`.
 - French error messages: 503 quota/busy (the API's own message), 429, 422, server unreachable.
-- 5 example questions on the welcome screen, and a permanent "Vérifiez l'information officielle auprès
-  de l'administration en cas de doute." notice.
+- 5 example questions on the welcome screen, and a permanent notice: "Vérifiez l'information officielle
+  auprès de l'administration en cas de doute. Ne saisissez pas de données personnelles."
 
 Settings:
 
@@ -166,16 +170,23 @@ Settings:
   Every text colour has a contrast of at least 6:1 with its background, and borders of interactive elements
   at least 3:1.
 - **Logo**: `public/LOGO.jpg` at the project root (Vite's `publicDir` points to it, so there is only one copy).
-- **API address**: `VITE_API_URL` (default `http://localhost:8000`); copy `frontend/.env.example` to
-  `frontend/.env.local` to change it. The dev server always uses port 5173, the origin allowed by the
-  API's `ALLOWED_ORIGINS`.
+- **API address**: the page calls relative paths (`/ask`). `npm run dev` (port 5173) forwards them to
+  `API_PROXY_TARGET` (default `http://localhost:8000`); copy `frontend/.env.example` to `frontend/.env.local`
+  to change it. `VITE_API_URL` is only for an API on another origin.
 
 Checked on 2026-11-09 in headless Edge, with real Gemini answers. Desktop 1280 px and mobile 390 px:
 suggestions, loading, citations (in text and in tables), source cards, Arrêter, Modifier, `previous` sent on
 follow-ups, feedback, 503/429/network error messages (faked in the page), keyboard focus, no horizontal
 scroll, no console error. These checks are not automated in the repository yet.
 
-Production build: `npm run build` (output in `frontend/dist/`, not in git).
+Production build: `npm run build` (output in `frontend/dist/`, not in git); `uvicorn api:app` then serves it.
+
+## Deployment
+
+Hugging Face Spaces (Docker, port 7860): step by step in [DEPLOY.md](DEPLOY.md). The `Dockerfile` builds the
+page, installs CPU-only torch, downloads the embedding model at build time and runs uvicorn as a non-root
+user. `chunks.json` and `embeddings.npy` stay out of the public repository: `deploy/prepare_space.py` copies
+an allow-list of files (including them) into `space_build/` for a private Space.
 
 ## Adding or archiving a document
 
@@ -306,11 +317,16 @@ show_page.py, test_tables.py, check_documents.py, check_years.py, list_semesters
 
 .streamlit/config.toml interface theme
 public/LOGO.jpg        logo shown in both interfaces
+Dockerfile             image for Hugging Face Spaces (page + API, port 7860)
+.dockerignore          never in the image: documents, .env, .venv, node_modules, feedback.jsonl
+requirements-deploy.txt  Python dependencies of the image (no Streamlit, no test tools)
+deploy/                prepare_space.py (allow-list copy to space_build/), space_README.md (Space settings)
+DEPLOY.md              deployment guide (French)
 docs/screenshot.png    README screenshot
 .env.example           template for .env (the real .env is never committed)
 
 Not in git: documents/, chunks.json, embeddings.npy, feedback.jsonl, .env, .venv/,
-            frontend/node_modules/, frontend/dist/
+            frontend/node_modules/, frontend/dist/, space_build/
 ```
 
 ## Stack

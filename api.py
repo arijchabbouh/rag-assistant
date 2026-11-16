@@ -20,13 +20,18 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, StringConstraints
 
 logger = logging.getLogger("api")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
+# Only needed when the page comes from ANOTHER origin than the API. In production the API serves the page itself
+# (FRONTEND_DIST below), and in development Vite forwards the calls (frontend/vite.config.js): same origin, no CORS.
 ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
                    if o.strip()]
+# the React build (npm run build). Served at "/" when it exists; without it the API works alone (development).
+FRONTEND_DIST = Path(os.environ.get("FRONTEND_DIST", "frontend/dist"))
 FEEDBACK_FILE = Path(os.environ.get("FEEDBACK_FILE", "feedback.jsonl"))
 RATE_LIMIT = 20          # requests...
 RATE_WINDOW = 60.0       # ...per this many seconds, per client IP
@@ -217,3 +222,12 @@ def feedback(body: FeedbackRequest):
     with feedback_lock, open(FEEDBACK_FILE, "a", encoding="utf-8") as f:
         f.write(json.dumps(line, ensure_ascii=False) + "\n")
     return {"saved": True}
+
+
+# ------------------------------------------------------------------- web page
+# Mounted last, so /ask, /health, /feedback and /docs keep priority over the files.
+if (FRONTEND_DIST / "index.html").exists():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+    logger.info("Serving the web interface from %s", FRONTEND_DIST)
+else:
+    logger.info("No %s/index.html: API only (run `npm run build` in frontend/ to serve the page)", FRONTEND_DIST)

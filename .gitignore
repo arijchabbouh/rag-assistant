@@ -23,3 +23,6 @@ feedback.jsonl
 # frontend (npm install / npm run build)
 node_modules/
 dist/
+
+# Hugging Face Space upload folder (deploy/prepare_space.py), contains chunks.json and embeddings.npy
+space_build/
